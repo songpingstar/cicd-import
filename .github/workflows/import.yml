@@ -23,8 +23,14 @@ jobs:
 
     - name: Install system dependencies
       run: |
-        apt-get install -y --no-install-recommends \
-          bzip2 wget git ca-certificates curl
+        sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+        bzip2 \
+        wget \
+        git \
+        ca-certificates \
+        curl \
+        && sudo apt-get clean \
+        && sudo rm -rf /var/lib/apt/lists/*
 
     - name: Install Miniconda
       run: |
