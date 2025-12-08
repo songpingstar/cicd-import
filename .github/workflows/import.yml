@@ -2,65 +2,53 @@ name: Tencent Kubernetes Engine
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
-# Environment variables available to all jobs and steps in this workflow
 env:
   TKE_IMAGE_URL: ccr.ccs.tencentyun.com/demo/mywebapp
   TKE_REGION: ap-guangzhou
   TKE_CLUSTER_ID: cls-mywebapp
   DEPLOYMENT_NAME: tke-test
+  CONDA_DIR: /opt/miniconda3
 
 jobs:
   setup-build-publish-deploy:
     name: Setup, Build, Publish, and Deploy
-    runs-on: ubuntu:22.04
+    runs-on: ubuntu-22.04
     environment: production
+    
     steps:
-    
-    - name: install base
-      run: |        
-        apt-get update && apt-get install -y --no-install-recommends \
-        bzip2 \
-        wget \
-        git \
-        ca-certificates \
-        curl \
-        vim \
-        dos2unix \
-        python3 \
-        python3-pip \
-        python-is-python3 
-       
-    - name: install python
-      run: |
-        RUN wget 'https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh' -O miniconda.sh && \
-        bash miniconda.sh -b -p /opt/miniconda3 && \
-        rm -f miniconda.sh
-        
-    - name: set env
-      run: |
-        # 将Miniconda的可执行文件目录添加到系统PATH
-        ENV PATH=/opt/miniconda3/bin:${PATH}
-        # 初始化Conda，使其能够在shell脚本中被调用，并配置conda-forge渠道
-        RUN conda config --add channels conda-forge 
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    - name: Publish
+    - name: Install system dependencies
       run: |
-        COPY Parsl__parsl-1175/setup_repo.sh /root/setup_repo.sh
-        chmod +x /root/setup_repo.sh && \
-            /bin/bash /root/setup_repo.sh
-            
-        COPY Parsl__parsl-1175/setup_env.sh /root/setup_env.sh
-        chmod +x /root/setup_env.sh && \
-            # 在一个已初始化Conda的bash环境中执行脚本
-            /bin/bash -c "source /root/.bashrc && /root/setup_env.sh"
+        apt-get update
+        apt-get install -y --no-install-recommends \
+          bzip2 wget git ca-certificates curl
 
-        # 修改.bashrc文件，这样当启动交互式bash时，会自动激活'testbed'环境
-        echo "conda activate testbed" >> /root/.bashrc
-       
-       
-    
+    - name: Install Miniconda
+      run: |
+        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+        bash miniconda.sh -b -p $CONDA_DIR
+        rm miniconda.sh
+        echo "$CONDA_DIR/bin" >> $GITHUB_PATH
 
-    
+    - name: Configure Conda
+      run: |
+        conda config --add channels conda-forge
+        conda init bash
+
+    - name: Setup repository
+      run: |
+        chmod +x Parsl__parsl-1175/setup_repo.sh
+        ./Parsl__parsl-1175/setup_repo.sh
+
+    - name: Setup environment
+      run: |
+        chmod +x Parsl__parsl-1175/setup_env.sh
+        source $CONDA_DIR/bin/activate
+        ./Parsl__parsl-1175/setup_env.sh
+        conda activate testbed
+
+    # 添加部署步骤...
