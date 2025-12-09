@@ -35,7 +35,7 @@ jobs:
 
     - name: Install Miniconda
       run: |
-        wget $PY_URL -O miniconda.sh
+        wget -q $PY_URL -O miniconda.sh
         bash miniconda.sh -b -p $CONDA_DIR
         rm miniconda.sh
         PATH=/opt/miniconda3/bin:${PATH}
@@ -64,6 +64,7 @@ jobs:
       continue-on-error: true
       run: |
         cd $INSTANCE_DIR
+        python --version
         python run_verification.py 2>&1 | tee -a verification.log
         
     - name: Upload test results
