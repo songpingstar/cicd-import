@@ -1,19 +1,20 @@
-name: Tencent Kubernetes Engine
+name: pytest verification
 
 on:
   push:
     branches: [main]
 
 env:
-  TKE_IMAGE_URL: ccr.ccs.tencentyun.com/demo/mywebapp
-  TKE_REGION: ap-guangzhou
-  TKE_CLUSTER_ID: cls-mywebapp
-  DEPLOYMENT_NAME: tke-test
+  REPO_URL: https://github.com/Parsl/parsl.git
+  INSTANCE_DIR: Parsl__parsl-1175
+  REPO_DIR: parsl
+  base_commit: fe6d47e0774935e82e14f4cb8123c795f24c627f
+  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
   CONDA_DIR: /opt/miniconda3
 
 jobs:
   setup-build:
-    name: Setup, Build, Publish, and Deploy
+    name: Setup, Build
     runs-on: ubuntu-22.04
     environment: production
     
@@ -34,23 +35,17 @@ jobs:
 
     - name: Install Miniconda
       run: |
-        wget https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh -O miniconda.sh
+        wget $PY_URL -O miniconda.sh
         bash miniconda.sh -b -p $CONDA_DIR
         rm miniconda.sh
         echo "$CONDA_DIR/bin" >> $GITHUB_PATH
+        python --version
 
-   # - name: Configure Conda
-   #   run: |
-   #     conda init bash
-   #     conda config --add channels conda-forge
-   #     conda config --remove channels defaults
-   #    mkdir 20251209
-
-    - name: Setup repository
+    - name: clone repository
       run: |
-        git clone https://github.com/Parsl/parsl.git Parsl__parsl-1175/parsl
-        cd Parsl__parsl-1175/parsl
-        git checkout "fe6d47e0774935e82e14f4cb8123c795f24c627f"
+        git clone $REPO_URL $INSTANCE_DIR/$REPO_DIR
+        cd $INSTANCE_DIR/$REPO_DIR
+        git checkout "$base_commit"
         
 
     - name: Setup environment
@@ -59,15 +54,15 @@ jobs:
         pip install numpy Cython
         pwd
         ls
-        cd Parsl__parsl-1175/parsl
+        cd $INSTANCE_DIR/$REPO_DIR
         pip install -r test-requirements.txt    
         
         
-    - name: run py
+    - name: run verification
       continue-on-error: true
       run: |
-        cd Parsl__parsl-1175
-        python -u run_verification.py 2>&1 | tee -a verification.log
+        cd $INSTANCE_DIR
+        python run_verification.py 2>&1 | tee -a verification.log
         
     - name: Upload test results
       if: always()
