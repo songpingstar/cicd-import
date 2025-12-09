@@ -39,7 +39,7 @@ jobs:
         bash miniconda.sh -b -p $CONDA_DIR
         rm miniconda.sh
         PATH=/opt/miniconda3/bin:${PATH}
-        source /root/.bashrc
+        source ~/.bashrc
         conda config --add channels conda-forge
         python --version
 
