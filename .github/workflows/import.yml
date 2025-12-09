@@ -48,8 +48,8 @@ jobs:
 
     - name: Setup repository
       run: |
-        git clone https://github.com/Parsl/parsl.git /Parsl__parsl-1175/parsl
-        cd /Parsl__parsl-1175/parsl
+        git clone https://github.com/Parsl/parsl.git Parsl__parsl-1175/parsl
+        cd Parsl__parsl-1175/parsl
         git checkout "fe6d47e0774935e82e14f4cb8123c795f24c627f"
         
 
