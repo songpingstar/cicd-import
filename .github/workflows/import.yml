@@ -66,4 +66,11 @@ jobs:
     - name: run py
       run: |
         cd Parsl__parsl-1175
-        python run_verification.py
+        python -u run_verification.py
+        
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: Parsl__parsl-1175/results.json
