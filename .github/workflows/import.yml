@@ -81,5 +81,5 @@ jobs:
       with:
         name: test-results
         path: |
-            Parsl__parsl-1175/results.json
-            Parsl__parsl-1175/verification.log
+            $INSTANCE_DIR/results.json
+            $INSTANCE_DIR/verification.log
