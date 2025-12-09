@@ -67,7 +67,7 @@ jobs:
       continue-on-error: true
       run: |
         cd Parsl__parsl-1175
-        python -u run_verification.py 2>&1 | tee -a logs/verification.log
+        python -u run_verification.py 2>&1 | tee -a verification.log
         
     - name: Upload test results
       if: always()
