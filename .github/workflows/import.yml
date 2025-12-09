@@ -61,11 +61,9 @@ jobs:
         ls
         cd Parsl__parsl-1175/parsl
         pip install -r test-requirements.txt    
-        cd ..
+        
         
     - name: run py
       run: |
-        pwd
-        ls
         cd Parsl__parsl-1175
         python run_verification.py

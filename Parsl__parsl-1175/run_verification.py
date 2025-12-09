@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 import subprocess
 import sys
@@ -6,14 +5,16 @@ import os
 import json
 from pathlib import Path
 import xml.etree.ElementTree as ET
+from typing import Union, List
 
 # --- 配置 ---
 # 请在这里设置你的代码仓库的绝对路径
-REPO_PATH = "parsl"
+REPO_PATH = 'parsl'
 # 要进行测试的基础 commit 哈希
-BASE_COMMIT = "fe6d47e0774935e82e14f4cb8123c795f24c627f"
+BASE_COMMIT = 'fe6d47e0774935e82e14f4cb8123c795f24c627f'
 # 实例ID，用于结果文件的顶级键
 INSTANCE_ID = 'Parsl__parsl-1175'
+
 
 # --- 路径配置 (自动计算) ---
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -52,9 +53,20 @@ def print_header(message):
     print(f"{Colors.BLUE}{'='*60}{Colors.ENDC}")
 
 def run_command(command, cwd, check=True):
-    """运行一个子进程命令并返回结果。"""
+    """运行一个子进程命令并返回结果。
+    
+    适配 Python 3.6: 使用 stdout=PIPE, stderr=PIPE 替代 capture_output=True,
+    使用 universal_newlines=True 替代 text=True。
+    """
     try:
-        process = subprocess.run(command, check=check, capture_output=True, text=True, cwd=str(cwd))
+        process = subprocess.run(
+            command, 
+            check=check, 
+            stdout=subprocess.PIPE, # 替代 capture_output=True
+            stderr=subprocess.PIPE, # 替代 capture_output=True
+            universal_newlines=True, # 替代 text=True
+            cwd=str(cwd)
+        )
         return True, process.stdout, process.stderr
     except subprocess.CalledProcessError as e:
         return False, e.stdout, e.stderr
@@ -66,32 +78,77 @@ def reset_repo(commit_hash):
     print_header(f"RESETTING REPO TO COMMIT: {commit_hash[:7]}")
     success, _, stderr = run_command(["git", "reset", "--hard", commit_hash], cwd=REPO_DIR)
     if not success:
-        print(f"{Colors.RED}❌ ERROR: 'git reset --hard' failed.{Colors.ENDC}\n{stderr}")
+        print(f"{Colors.RED}[ERROR] 'git reset --hard' failed.{Colors.ENDC}\n{stderr}")
         return False
-    success, _, stderr = run_command(["git", "clean", "-fdx"], cwd=REPO_DIR)
-    if not success:
-        print(f"{Colors.RED}❌ ERROR: 'git clean -fdx' failed.{Colors.ENDC}\n{stderr}")
+    success_clean, _, stderr_clean = run_command(["git", "clean", "-df"], cwd=REPO_DIR)
+    if not success_clean:
+        print(f"{Colors.RED}[ERROR] 'git clean -df' failed.{Colors.ENDC}\n{stderr}")
         return False
-    print(f"{Colors.GREEN}✅ Repo has been forcefully reset and cleaned.{Colors.ENDC}")
+    print(f"{Colors.GREEN}[SUCCESS] Repo has been forcefully reset and cleaned.{Colors.ENDC}")
     return True
 
 def apply_patch(patch_path):
     """直接应用一个补丁文件。"""
     if not patch_path.exists():
-        print(f"{Colors.YELLOW}ℹ️ Patch file {patch_path.name} not found, skipping.{Colors.ENDC}")
+        # 替换 ℹ️
+        print(f"{Colors.YELLOW}[INFO] Patch file {patch_path.name} not found, skipping.{Colors.ENDC}")
         return True
-    print(f"{Colors.YELLOW}  -> Applying patch: {patch_path.name}{Colors.ENDC}")
+    print(f"{Colors.YELLOW}   -> Applying patch: {patch_path.name}{Colors.ENDC}")
     success, _, stderr = run_command(["git", "apply", str(patch_path)], cwd=REPO_DIR)
     if not success:
-        print(f"{Colors.RED}❌ ERROR: Applying patch {patch_path.name} failed.{Colors.ENDC}\n{stderr}")
+        # 替换 ❌
+        print(f"{Colors.RED}[ERROR] Applying patch {patch_path.name} failed.{Colors.ENDC}\n{stderr}")
         return False
-    print(f"{Colors.GREEN}✅ Applied patch {patch_path.name} successfully.{Colors.ENDC}")
+    # 替换 ✅
+    print(f"{Colors.GREEN}[SUCCESS] Applied patch {patch_path.name} successfully.{Colors.ENDC}")
     return True
     
-def parse_junit_xml_report(report_path: Path) -> dict | None:
+def get_modified_test_files_from_patch(patch_path: Path) -> List[str]:
+    """
+    从指定的补丁文件中解析出所有被修改的 .py 文件路径。
+    如果文件不存在、读取失败或没有找到 .py 文件，则返回原始的默认测试文件列表。
+    """
+    # 原始的默认测试文件列表
+    DEFAULT_TEST_FILES = ["tests/reference.py", "tests/test_kerns.py", "tests/test_likelihoods.py"]
+
+    if not patch_path.is_file():
+        print(f"{Colors.YELLOW}[INFO] Patch file {patch_path.name} not found. Running default tests.{Colors.ENDC}")
+        return DEFAULT_TEST_FILES
+
+    modified_files = set()
+    try:
+        with open(patch_path, 'r', encoding='utf-8', errors='ignore') as f:
+            for line in f:
+                # 补丁文件头行格式通常是 '--- a/path/to/file' 或 '+++ b/path/to/file'
+                if line.startswith('--- a/') or line.startswith('+++ b/'):
+                    # 提取路径并去除 'a/' 或 'b/' 前缀
+                    path = line.split(' ', 2)[1].strip()
+                    if path.startswith('a/') or path.startswith('b/'):
+                        path = path[2:]
+                    
+                    # 仅添加 Python 文件
+                    if path.endswith('.py'):
+                        modified_files.add(path)
+                        
+    except Exception as e:
+        print(f"{Colors.RED}[ERROR] Failed to read or parse patch file {patch_path}: {e}. Running default tests.{Colors.ENDC}")
+        return DEFAULT_TEST_FILES
+
+    file_list = sorted(list(modified_files))
+    
+    if not file_list:
+         print(f"{Colors.YELLOW}[INFO] No Python files found in {patch_path}. Running default tests.{Colors.ENDC}")
+         return DEFAULT_TEST_FILES
+    
+    # 打印运行的文件列表（仅展示前几个）
+    print(f"{Colors.BLUE}[INFO] Dynamic test file list generated from {patch_path.name}: {', '.join(file_list[:3])}{'...' if len(file_list) > 3 else ''}{Colors.ENDC}")
+    return file_list
+
+def parse_junit_xml_report(report_path: Path) -> Union[dict, None]:
     """解析 JUnit XML 报告并返回一个包含测试结果的字典。"""
     if not report_path.is_file():
-        print(f"{Colors.RED}  -> FAILED: Pytest did not generate a report file at {report_path}.{Colors.ENDC}")
+        # 保持无 emoji 状态
+        print(f"{Colors.RED}   -> FAILED: Pytest did not generate a report file at {report_path}.{Colors.ENDC}")
         return None
         
     test_results = {}
@@ -101,29 +158,76 @@ def parse_junit_xml_report(report_path: Path) -> dict | None:
         for testcase in root.iter("testcase"):
             class_name = testcase.get("classname", "")
             test_name = testcase.get("name", "")
-            file_path = class_name.replace(".", "/") + ".py"
-            nodeid = f"{file_path}::{test_name}"
             
+            nodeid = ""
+            if class_name:
+
+                if any(c.isupper() for c in class_name):
+
+                    parts = class_name.split('.')
+                    module_path_parts = parts[:-1]
+                    class_name_only = parts[-1]   
+                    
+                    # 将模块路径转换为文件路径
+                    if module_path_parts:
+                        file_path = "/".join(module_path_parts) + ".py"
+                    else:
+                        file_path = f"{class_name_only}.py"
+                        
+                    nodeid = f"{file_path}::{class_name_only}::{test_name}"
+                else:
+                    parts = class_name.split('.')
+                    file_path = "/".join(parts) + ".py"
+                    nodeid = f"{file_path}::{test_name}"
+            else:
+                nodeid = test_name
+
             failure_node = testcase.find("failure")
             error_node = testcase.find("error")
             skipped_node = testcase.find("skipped")
 
-            if failure_node is not None or error_node is not None:
+            if failure_node is not None:
                 test_results[nodeid] = "failed"
+            elif error_node is not None:
+                test_results[nodeid] = "error"
             elif skipped_node is None:
                 test_results[nodeid] = "passed"
+                
     except ET.ParseError as e:
-        print(f"{Colors.RED}  -> FAILED: Could not parse the JUnit XML report: {e}{Colors.ENDC}")
+        print(f"{Colors.RED}   -> FAILED: Could not parse the JUnit XML report: {e}{Colors.ENDC}")
         return None
     finally:
         if report_path.exists():
-            os.remove(report_path)
+            try:
+                report_path.unlink() # 使用 pathlib 的 unlink 方法更现代
+            except OSError as e:
+                # 替换 ⚠️
+                print(f"{Colors.YELLOW}   -> WARNING: Could not delete report file {report_path}: {e}{Colors.ENDC}")
 
     return test_results
 
-def run_all_tests_and_get_results():
-    """使用 pytest 运行所有测试并从 JUnit XML 报告中解析结果。不一定一定要pytest"""
-    # TODO
+def run_all_tests_and_get_results(test_files: List[str]) -> Union[dict, None]:
+    """使用 pytest 运行指定的测试文件列表，并从 JUnit XML 报告中解析结果。"""
+    report_file=SCRIPT_DIR/f"report_{os.getpid()}.xml"
+
+    existing_test_files = []
+    for file_path_str in test_files:
+        repo_file_path = REPO_DIR / file_path_str
+        if repo_file_path.is_file():
+            existing_test_files.append(file_path_str)
+
+    # 将动态获取的测试文件列表添加到 command 中
+    command=["pytest"] + existing_test_files + [f"--junitxml={str(report_file)}"]
+
+    # 打印执行的命令
+    print(f"{Colors.BLUE}   -> Executing: pytest {' '.join(test_files)}{Colors.ENDC}")
+
+    run_command(command,cwd=REPO_DIR,check=False)
+
+    results=parse_junit_xml_report(report_file)
+    if results is not None:
+        print(f"{Colors.GREEN} -> COMPLETED: Parsed {len(results)} test results.{Colors.ENDC}")
+    return results
 
 def write_results_and_exit(success=True):
     """将最终结果写入json文件并退出程序。"""
@@ -131,37 +235,38 @@ def write_results_and_exit(success=True):
     print_header("FINAL STEP: WRITING results.json")
     try:
         with open(output_path, "w") as f: json.dump(results, f, indent=4)
-        print(f"{Colors.GREEN}✅ Successfully wrote results to {output_path}{Colors.ENDC}")
+        # 替换 ✅
+        print(f"{Colors.GREEN}[SUCCESS] Successfully wrote results to {output_path}{Colors.ENDC}")
     except Exception as e:
-        print(f"{Colors.RED}❌ ERROR: Could not write to {output_path}: {e}{Colors.ENDC}")
+        # 替换 ❌
+        print(f"{Colors.RED}[ERROR] Could not write to {output_path}: {e}{Colors.ENDC}")
     sys.exit(0 if success else 1)
 
 def main():
     global results
     
-    # (可选) 在开始前，可以运行一次 poetry install 确保环境是最新的
-    print_header("Ensuring Poetry environment is up to date")
-    success, _, stderr = run_command(["poetry", "install"], cwd=REPO_DIR)
-    if not success:
-        print(f"{Colors.RED}❌ ERROR: 'poetry install' failed.{Colors.ENDC}\n{stderr}")
-        write_results_and_exit(False)
+    # 1. 确定要运行的测试文件列表
+    test_patch_path = SCRIPT_DIR / "test.patch"
+    test_files_to_run = get_modified_test_files_from_patch(test_patch_path)
 
     # --- 补丁前运行 ---
     if not reset_repo(BASE_COMMIT): write_results_and_exit(False)
-    if not apply_patch(SCRIPT_DIR / "test.patch"): write_results_and_exit(False)
+    if not apply_patch(test_patch_path): write_results_and_exit(False)
     
     print_header("STEP 1: PRE-PATCH - Running tests with only test patch")
-    pre_patch_results = run_all_tests_and_get_results()
+    # 传递动态生成的测试文件列表
+    pre_patch_results = run_all_tests_and_get_results(test_files_to_run)
     if pre_patch_results is None: write_results_and_exit(False)
 
     # --- 补丁后运行 ---
     if not reset_repo(BASE_COMMIT): write_results_and_exit(False)
-    if not apply_patch(SCRIPT_DIR / "test.patch"): write_results_and_exit(False)
+    if not apply_patch(test_patch_path): write_results_and_exit(False)
     if not apply_patch(SCRIPT_DIR / "code.patch"): write_results_and_exit(False)
     results[INSTANCE_ID]["patch_successfully_applied"] = True
 
     print_header("STEP 2: POST-PATCH - Running tests with both patches")
-    post_patch_results = run_all_tests_and_get_results()
+    # 传递动态生成的测试文件列表
+    post_patch_results = run_all_tests_and_get_results(test_files_to_run)
     if post_patch_results is None: write_results_and_exit(False)
 
     # --- 结果分类 ---
@@ -191,10 +296,13 @@ def main():
 
     if fail_to_pass and not fail_to_fail and not pass_to_fail:
         results[INSTANCE_ID]["resolved"] = True
-        print(f"\n{Colors.GREEN}🎉🎉🎉 VERIFICATION SUCCESSFUL! 🎉🎉🎉{Colors.ENDC}")
+        # 替换 🎉🎉🎉
+        print(f"\n{Colors.GREEN}=== VERIFICATION SUCCESSFUL! ==={Colors.ENDC}")
         write_results_and_exit(True)
     else:
-        print(f"\n{Colors.RED}❌❌❌ VERIFICATION FAILED! ❌❌❌{Colors.ENDC}")
+        # 替换 ❌❌❌
+        print(f"\n{Colors.RED}=== VERIFICATION FAILED! ==={Colors.ENDC}")
+        # 保持无 emoji 状态
         if not fail_to_pass: print(f"{Colors.YELLOW}  - No tests were fixed.{Colors.ENDC}")
         if fail_to_fail: print(f"{Colors.YELLOW}  - {len(fail_to_fail)} test(s) continued to fail (first 5): {fail_to_fail[:5]}{Colors.ENDC}")
         if pass_to_fail: print(f"{Colors.YELLOW}  - {len(pass_to_fail)} regression(s) detected (first 5): {pass_to_fail[:5]}{Colors.ENDC}")
@@ -202,9 +310,10 @@ def main():
 
 if __name__ == "__main__":
     if not REPO_PATH or not REPO_DIR.is_dir() or not (REPO_DIR / '.git').is_dir():
-        print(f"{Colors.RED}错误：配置的仓库路径无效！{Colors.ENDC}")
-        print(f"{Colors.YELLOW}请修改脚本顶部的 `REPO_PATH` 变量。{Colors.ENDC}")
-        print(f"{Colors.YELLOW}当前配置路径: '{REPO_PATH}'{Colors.ENDC}")
+        # Fix UnicodeEncodeError: replacing Chinese characters with ASCII-safe English
+        print(f"{Colors.RED}ERROR: Invalid repository path configured!{Colors.ENDC}")
+        print(f"{Colors.YELLOW}Please modify the `REPO_PATH` variable at the top of the script.{Colors.ENDC}")
+        print(f"{Colors.YELLOW}Current configured path: '{REPO_PATH}'{Colors.ENDC}")
         sys.exit(1)
     
     main()
