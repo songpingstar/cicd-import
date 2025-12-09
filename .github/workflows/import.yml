@@ -81,5 +81,5 @@ jobs:
       with:
         name: test-results
         path: |
-            $INSTANCE_DIR/results.json
-            $INSTANCE_DIR/verification.log
+            ${{ env.INSTANCE_DIR }}/results.json
+            ${{ env.INSTANCE_DIR }}/verification.log
