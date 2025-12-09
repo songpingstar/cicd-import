@@ -9,11 +9,11 @@ import xml.etree.ElementTree as ET
 
 # --- 配置 ---
 # 请在这里设置你的代码仓库的绝对路径
-REPO_PATH = ""
+REPO_PATH = "parsl"
 # 要进行测试的基础 commit 哈希
-BASE_COMMIT = ""
+BASE_COMMIT = "fe6d47e0774935e82e14f4cb8123c795f24c627f"
 # 实例ID，用于结果文件的顶级键
-INSTANCE_ID = ''
+INSTANCE_ID = 'Parsl__parsl-1175'
 
 # --- 路径配置 (自动计算) ---
 SCRIPT_DIR = Path(__file__).resolve().parent
