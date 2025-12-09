@@ -74,4 +74,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-results
-        path: Parsl__parsl-1175/results.json,Parsl__parsl-1175/verification.json
+        path: |
+        Parsl__parsl-1175/results.json
+        Parsl__parsl-1175/verification.json
