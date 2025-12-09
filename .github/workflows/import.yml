@@ -39,12 +39,12 @@ jobs:
         rm miniconda.sh
         echo "$CONDA_DIR/bin" >> $GITHUB_PATH
 
-    - name: Configure Conda
-      run: |
-        conda init bash
-        conda config --add channels conda-forge
-        conda config --remove channels defaults
-        mkdir 20251209
+   # - name: Configure Conda
+   #   run: |
+   #     conda init bash
+   #     conda config --add channels conda-forge
+   #     conda config --remove channels defaults
+   #    mkdir 20251209
 
     - name: Setup repository
       run: |
