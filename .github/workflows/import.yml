@@ -48,14 +48,17 @@ jobs:
 
     - name: Setup repository
       run: |
-        chmod +x Parsl__parsl-1175/setup_repo.sh
-        ./Parsl__parsl-1175/setup_repo.sh
+        git clone https://github.com/Parsl/parsl.git /Parsl__parsl-1175/parsl
+        cd /Parsl__parsl-1175/parsl
+        git checkout "fe6d47e0774935e82e14f4cb8123c795f24c627f"
+        
 
     - name: Setup environment
       run: |
-        chmod +x Parsl__parsl-1175/setup_env.sh
-        ./Parsl__parsl-1175/setup_env.sh
-        ls
+        pip install --upgrade pip setuptools
+        pip install numpy Cython
+        pip install -r test-requirements.txt    
+        cd ..
         
     - name: run py
       run: |
