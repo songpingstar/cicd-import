@@ -49,11 +49,14 @@ jobs:
         git clone $REPO_URL $INSTANCE_DIR/$REPO_DIR
         cd $INSTANCE_DIR/$REPO_DIR
         git checkout "$base_commit"
-        echo "python版本是："
-        python --version
+
 
     - name: setup_env
       run: |
+        PATH=/opt/miniconda3/bin:${PATH}
+        source ~/.bashrc
+        echo "python版本是："
+        python --version
         pip install --upgrade pip setuptools
         pip install numpy Cython
         pwd
@@ -65,9 +68,11 @@ jobs:
     - name: run verification
       continue-on-error: true
       run: |
-        cd $INSTANCE_DIR
+        PATH=/opt/miniconda3/bin:${PATH}
+        source ~/.bashrc
         echo "python版本是："
         python --version
+        cd $INSTANCE_DIR
         python run_verification.py 2>&1 | tee -a verification.log
         
     - name: Upload test results
