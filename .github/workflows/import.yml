@@ -44,6 +44,7 @@ jobs:
         conda init bash
         conda config --add channels conda-forge
         conda config --remove channels defaults
+        mkdir 20251209
 
     - name: Setup repository
       run: |
@@ -54,6 +55,6 @@ jobs:
       run: |
         chmod +x Parsl__parsl-1175/setup_env.sh
         ./Parsl__parsl-1175/setup_env.sh
-        conda activate testbed
+        ls
 
     # 添加部署步骤...
