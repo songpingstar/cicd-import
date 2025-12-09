@@ -38,17 +38,19 @@ jobs:
         wget $PY_URL -O miniconda.sh
         bash miniconda.sh -b -p $CONDA_DIR
         rm miniconda.sh
-        echo "$CONDA_DIR/bin" >> $GITHUB_PATH
+        PATH=/opt/miniconda3/bin:${PATH}
+        source /root/.bashrc
+        conda config --add channels conda-forge
         python --version
 
-    - name: clone repository
+    - name: setup_repo
       run: |
         git clone $REPO_URL $INSTANCE_DIR/$REPO_DIR
         cd $INSTANCE_DIR/$REPO_DIR
         git checkout "$base_commit"
         
 
-    - name: Setup environment
+    - name: setup_env
       run: |
         pip install --upgrade pip setuptools
         pip install numpy Cython
