@@ -57,6 +57,7 @@ jobs:
       run: |
         pip install --upgrade pip setuptools
         pip install numpy Cython
+        pwd
         pip install -r test-requirements.txt    
         cd ..
         
