@@ -41,6 +41,7 @@ jobs:
         PATH=/opt/miniconda3/bin:${PATH}
         source ~/.bashrc
         conda config --add channels conda-forge
+        echo "python版本是："
         python --version
 
     - name: setup_repo
@@ -48,7 +49,8 @@ jobs:
         git clone $REPO_URL $INSTANCE_DIR/$REPO_DIR
         cd $INSTANCE_DIR/$REPO_DIR
         git checkout "$base_commit"
-        
+        echo "python版本是："
+        python --version
 
     - name: setup_env
       run: |
@@ -64,6 +66,7 @@ jobs:
       continue-on-error: true
       run: |
         cd $INSTANCE_DIR
+        echo "python版本是："
         python --version
         python run_verification.py 2>&1 | tee -a verification.log
         
