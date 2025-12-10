@@ -39,6 +39,7 @@ jobs:
         bash miniconda.sh -b -p $CONDA_DIR
         rm miniconda.sh
         PATH=/opt/miniconda3/bin:${PATH}
+        echo "/opt/miniconda3/bin" >> $GITHUB_PATH
         source ~/.bashrc
         conda config --add channels conda-forge
         echo "python版本是："
@@ -46,6 +47,8 @@ jobs:
 
     - name: setup_repo
       run: |
+        echo "python版本是："
+        python --version
         git clone $REPO_URL $INSTANCE_DIR/$REPO_DIR
         cd $INSTANCE_DIR/$REPO_DIR
         git checkout "$base_commit"
@@ -57,13 +60,28 @@ jobs:
         source ~/.bashrc
         echo "python版本是："
         python --version
+        
         pip install --upgrade pip setuptools
         pip install numpy Cython
         pwd
         ls
         cd $INSTANCE_DIR/$REPO_DIR
         pip install -r test-requirements.txt    
-        
+    
+    - name: run verification test
+      run: |
+        PATH=/opt/miniconda3/bin:${PATH}
+        source ~/.bashrc
+        echo "python版本是："
+        python --version
+        echo "pytest版本是："
+        pytest --version
+        cd $INSTANCE_DIR
+        pytest parsl/tests/configs/summit_local_htex.py
+        git apply test.patch parsl
+        pytest parsl/tests/configs/summit_local_htex.py || true
+        git apply code.patch parsl
+        pytest parsl/tests/configs/summit_local_htex.py
         
     - name: run verification
       continue-on-error: true
@@ -72,6 +90,7 @@ jobs:
         source ~/.bashrc
         echo "python版本是："
         python --version
+        
         cd $INSTANCE_DIR
         python run_verification.py 2>&1 | tee -a verification.log
         
