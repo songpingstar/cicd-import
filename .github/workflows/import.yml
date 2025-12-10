@@ -63,6 +63,7 @@ jobs:
         pip install -q --upgrade pip setuptools
         pip install -q numpy Cython typeguard  dill     
         pip install -e .
+        export PARSL_TESTING="true"
         pip install -q -r test-requirements.txt
         pip install -q --upgrade pytest
 
@@ -75,7 +76,9 @@ jobs:
         python --version
         echo "pytest版本是："
         pytest --version
+        export PARSL_TESTING="true"
         cd $INSTANCE_DIR/$REPO_DIR
+        
         git apply ../test.patch 
         pytest parsl/tests/configs/summit_local_htex.py || true
         git apply ../code.patch 
