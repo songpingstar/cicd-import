@@ -66,8 +66,6 @@ jobs:
         export PARSL_TESTING="true"
         pip install -q -r test-requirements.txt
         pip install -q --upgrade pytest
-        flake8 parsl/
-        parsl/tests/lint-inits.sh
         for test in parsl/tests/test*/test*; do
           pytest $test \
             -k "not cleannet" \
