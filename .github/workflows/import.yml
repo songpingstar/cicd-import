@@ -60,11 +60,14 @@ jobs:
         python --version
         
         pip install --upgrade pip setuptools
-        pip install numpy Cython
+        pip install pytest pytest-xdist pytest-cov
+        pip install numpy Cython        
         pwd
         ls
         cd $INSTANCE_DIR/$REPO_DIR
-        pip install -r test-requirements.txt    
+        pip install -r test-requirements.txt
+ 
+        
     
     - name: run verification test
       run: |
