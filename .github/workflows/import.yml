@@ -56,8 +56,6 @@ jobs:
 
     - name: setup_env
       run: |
-        PATH=/opt/miniconda3/bin:${PATH}
-        source ~/.bashrc
         echo "python版本是："
         python --version
         
@@ -70,24 +68,20 @@ jobs:
     
     - name: run verification test
       run: |
-        PATH=/opt/miniconda3/bin:${PATH}
-        source ~/.bashrc
         echo "python版本是："
         python --version
         echo "pytest版本是："
-        pytest --version
+        python -m pytest --version
         cd $INSTANCE_DIR
-        pytest parsl/tests/configs/summit_local_htex.py
+        python -m pytest parsl/tests/configs/summit_local_htex.py
         git apply test.patch parsl
-        pytest parsl/tests/configs/summit_local_htex.py || true
+        python -m pytest parsl/tests/configs/summit_local_htex.py || true
         git apply code.patch parsl
-        pytest parsl/tests/configs/summit_local_htex.py
+        python -m pytest parsl/tests/configs/summit_local_htex.py
         
     - name: run verification
       continue-on-error: true
       run: |
-        PATH=/opt/miniconda3/bin:${PATH}
-        source ~/.bashrc
         echo "python版本是："
         python --version
         
