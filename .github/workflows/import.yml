@@ -60,13 +60,13 @@ jobs:
         python --version
         
         pip install --upgrade pip setuptools
-        pip install pytest pytest-xdist pytest-cov
-        pip install "attrs<21.0.0"
         pip install numpy Cython        
         pwd
         ls
         cd $INSTANCE_DIR/$REPO_DIR
         pip install -r test-requirements.txt
+        pip install pytest pytest-xdist pytest-cov
+
  
         
     
