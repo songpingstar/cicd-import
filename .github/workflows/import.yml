@@ -58,12 +58,13 @@ jobs:
       run: |
         echo "python版本是："
         python --version
-        
-        pip install --upgrade pip setuptools
-        pip install -q numpy Cython typeguard  dill     
         cd $INSTANCE_DIR/$REPO_DIR
-        pip install -r test-requirements.txt
-        pip install --upgrade pytest
+      
+        pip install -q --upgrade pip setuptools
+        pip install -q numpy Cython typeguard  dill     
+        pip install -e .
+        pip install -rq test-requirements.txt
+        pip install -q --upgrade pytest
 
  
         
