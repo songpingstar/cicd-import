@@ -26,13 +26,16 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update && sudo apt-get install -y --no-install-recommends \
-        bzip2 \
         wget \
         git \
         ca-certificates \
         curl \
-        && sudo apt-get clean \
-        && sudo rm -rf /var/lib/apt/lists/*
+        vim \
+        dos2unix \
+        # --- Python 基础 ---
+        python3 \
+        python3-pip \
+        python-is-python3 
 
     - name: Install Miniconda
       run: |
@@ -48,9 +51,15 @@ jobs:
 
     - name: setup_repo
       run: |
-        git clone $REPO_URL $INSTANCE_DIR/$REPO_DIR
-        cd $INSTANCE_DIR/$REPO_DIR
-        git checkout "$base_commit"
+        cat > setup_repo.sh << EOF
+            #!/bin/bash
+            #mkdir -p /testbed
+            git clone $REPO_URL $INSTANCE_DIR/$REPO_DIR
+            cd $INSTANCE_DIR/$REPO_DIR
+            git checkout "$base_commit"
+            #cd ..
+        EOF
+        bash setup_repo.sh
 
 
     - name: setup_env
@@ -58,13 +67,15 @@ jobs:
         echo "python版本是："
         python --version
         cd $INSTANCE_DIR/$REPO_DIR
-      
-        pip install -q --upgrade pip setuptools
-        pip install -e .
-        pip install -q -r requirements/test.txt
-        pip install -q --upgrade pytest
-        
-    
+        cat > setup_env.sh << EOF
+            #!/bin/bash
+            pip install -q --upgrade pip setuptools
+            pip install -e .
+            pip install -q -r requirements/test.txt
+            pip install -q --upgrade pytest
+            #cd /testbed/$REPO_DIR
+        EOF
+        bash setup_env.sh
     - name: run verification test
       run: |
         echo "python版本是："
@@ -86,7 +97,7 @@ jobs:
         python --version
         
         cd $INSTANCE_DIR
-        python run_verification.py 2>&1 | tee -a verification.log
+        python run_verification.py 
         
     - name: Upload test results
       if: always()
@@ -95,4 +106,8 @@ jobs:
         name: test-results
         path: |
             ${{ env.INSTANCE_DIR }}/results.json
-            ${{ env.INSTANCE_DIR }}/verification.log
+            ${{ env.INSTANCE_DIR }}/Dockerfile
+            ${{ env.INSTANCE_DIR }}/setup_env.sh
+            ${{ env.INSTANCE_DIR }}/setup_repo.sh
+            ${{ env.INSTANCE_DIR }}/run_verification.py
+            ${{ env.INSTANCE_DIR }}/${{ env.INSTANCE_DIR }}.json
