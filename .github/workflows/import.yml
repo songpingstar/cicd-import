@@ -65,7 +65,7 @@ jobs:
         ls
         cd $INSTANCE_DIR/$REPO_DIR
         pip install -r test-requirements.txt
-        pip install pytest pytest-xdist pytest-cov
+        pip install --upgrade pytest
 
  
         
@@ -75,7 +75,7 @@ jobs:
         echo "python版本是："
         python --version
         echo "pytest版本是："
-        python -m pytest --version
+        pytest --version
         cd $INSTANCE_DIR
         python -m pytest parsl/tests/configs/summit_local_htex.py
         git apply test.patch parsl
