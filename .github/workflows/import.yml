@@ -61,6 +61,7 @@ jobs:
       
         pip install -q --upgrade pip setuptools
         pip install -e .
+        pip install -q -r requirements/test.txt
         pip install -q --upgrade pytest
         
     
