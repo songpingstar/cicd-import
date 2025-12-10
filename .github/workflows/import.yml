@@ -51,6 +51,7 @@ jobs:
     - name: setup_repo
       run: |
         echo "开始写入setup_repo.sh 文件====================="
+        cd $INSTANCE_DIR/$REPO_DIR
         cat > setup_repo.sh << EOF
             #!/bin/bash
             #mkdir -p /testbed
@@ -110,7 +111,7 @@ jobs:
         path: |
             ${{ env.INSTANCE_DIR }}/results.json
             ${{ env.INSTANCE_DIR }}/Dockerfile
-            ${{ env.INSTANCE_DIR }}/setup_env.sh
-            ${{ env.INSTANCE_DIR }}/setup_repo.sh
+            ${{ env.INSTANCE_DIR }}/${{ env.REPO_DIR }}/setup_env.sh
+            ${{ env.INSTANCE_DIR }}/${{ env.REPO_DIR }}/setup_repo.sh
             ${{ env.INSTANCE_DIR }}/run_verification.py
             ${{ env.INSTANCE_DIR }}/${{ env.INSTANCE_DIR }}.json
