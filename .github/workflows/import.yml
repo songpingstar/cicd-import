@@ -5,11 +5,12 @@ on:
     branches: [main]
 
 env:
-  REPO_URL: https://github.com/Parsl/parsl.git
-  INSTANCE_DIR: Parsl__parsl-1175
-  REPO_DIR: parsl
-  base_commit: fe6d47e0774935e82e14f4cb8123c795f24c627f
-  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
+  REPO_URL: https://github.com/PyGithub/PyGithub.git
+  INSTANCE_DIR: PyGithub__PyGithub-2882
+  REPO_DIR: PyGithub
+  base_commit: 14af705195df8bf6557fae6fdd3afd198b92ba82
+#  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
+  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
   CONDA_DIR: /opt/miniconda3
 
 jobs:
@@ -47,8 +48,6 @@ jobs:
 
     - name: setup_repo
       run: |
-        echo "python版本是："
-        python --version
         git clone $REPO_URL $INSTANCE_DIR/$REPO_DIR
         cd $INSTANCE_DIR/$REPO_DIR
         git checkout "$base_commit"
@@ -61,26 +60,8 @@ jobs:
         cd $INSTANCE_DIR/$REPO_DIR
       
         pip install -q --upgrade pip setuptools
-        pip install -q numpy Cython typeguard  dill     
         pip install -e .
-        export PARSL_TESTING="true"
-        pip install -q -r test-requirements.txt
         pip install -q --upgrade pytest
-        for test in parsl/tests/test*/test*; do
-          pytest $test \
-            -k "not cleannet" \
-            --config parsl/tests/configs/htex_local.py \
-            --cov=parsl \
-            --cov-append \
-            --cov-report=
-          
-          export PytestReturnCode=$?
-          echo "pytest return code is $PytestReturnCode"
-          
-          if [[ "$PytestReturnCode" != 0 ]] && [[ "$PytestReturnCode" != 5 ]]; then
-            exit 1
-          fi
-         done
         
     
     - name: run verification test
@@ -89,13 +70,13 @@ jobs:
         python --version
         echo "pytest版本是："
         pytest --version
-        export PARSL_TESTING="true"
+
         cd $INSTANCE_DIR/$REPO_DIR
-        
+        pytest tests/Repository.py
         git apply ../test.patch 
-        pytest parsl/tests/configs/summit_local_htex.py || true
+        pytest tests/Repository.py || true
         git apply ../code.patch 
-        pytest parsl/tests/configs/summit_local_htex.py
+        pytest tests/Repository.py
         
     - name: run verification
       continue-on-error: true
