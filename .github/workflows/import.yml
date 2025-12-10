@@ -78,9 +78,9 @@ jobs:
         pytest --version
         cd $INSTANCE_DIR/$REPO_DIR
         git apply ../test.patch 
-        pytest tests/configs/summit_local_htex.py || true
+        pytest parsl/tests/configs/summit_local_htex.py || true
         git apply ../code.patch 
-        pytest tests/configs/summit_local_htex.py
+        pytest parsl/tests/configs/summit_local_htex.py
         
     - name: run verification
       continue-on-error: true
