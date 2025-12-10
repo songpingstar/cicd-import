@@ -61,6 +61,7 @@ jobs:
         
         pip install --upgrade pip setuptools
         pip install pytest pytest-xdist pytest-cov
+        pip install "attrs<21.0.0"
         pip install numpy Cython        
         pwd
         ls
