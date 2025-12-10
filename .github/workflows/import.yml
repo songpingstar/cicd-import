@@ -63,7 +63,7 @@ jobs:
         pip install -q --upgrade pip setuptools
         pip install -q numpy Cython typeguard  dill     
         pip install -e .
-        pip install -rq test-requirements.txt
+        pip install -q -r test-requirements.txt
         pip install -q --upgrade pytest
 
  
