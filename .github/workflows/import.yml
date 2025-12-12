@@ -143,6 +143,7 @@ jobs:
         sed -i "s|INSTANCE_DIR|$INSTANCE_DIR|g" mergejson.py
         
         echo "开始执行mergejson.py 合并程序====================="
+        cd $INSTANCE_DIR/
         python mergejson.py
         
     - name: Upload test results
