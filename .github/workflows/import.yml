@@ -47,7 +47,7 @@ jobs:
         conda config --add channels conda-forge
         echo "python版本是："
         python --version
-
+        sed -i "s/MinicondaURL/$PY_URL/g" $GITHUB_WORKSPACE/$INSTANCE_DIR/Dockerfile
     - name: setup_repo
       run: |
         echo "开始写入setup_repo.sh 文件====================="
@@ -83,7 +83,7 @@ jobs:
         echo "开始执行setup_env 脚本====================="
         sudo bash setup_env.sh
         
-        cp $GITHUB_WORKSPACE/setup_repo.sh $GITHUB_WORKSPACE/$INSTANCE_DIR/
+        cp $GITHUB_WORKSPACE/setup_env.sh $GITHUB_WORKSPACE/$INSTANCE_DIR/
     - name: run pytest
       run: |
         echo "python版本是："
@@ -109,6 +109,16 @@ jobs:
         echo "python版本是："
         python --version
         
+        # 使用 sed 替换变量值
+        sed -i "s|REPO_PATH = ''|REPO_PATH = '$REPO_DIR'|g" run_verification.py
+        sed -i "s|BASE_COMMIT = ''|BASE_COMMIT = '$base_commit'|g" run_verification.py
+        sed -i "s|INSTANCE_ID = ''|INSTANCE_ID = '$INSTANCE_DIR'|g" run_verification.py
+    
+        # 验证替换结果
+        echo "=== 替换后的变量值 ==="
+        grep -E "^(REPO_PATH|BASE_COMMIT|INSTANCE_ID) =" run_verification.py
+        
+        
         echo "开始写入run_verification.sh 脚本====================="
         cat > run_verification.sh << EOF
         cd /testbed
@@ -121,6 +131,7 @@ jobs:
         echo "开始执行run_verification.sh 脚本====================="
         sudo bash run_verification.sh
         
+        cp /testbed/results.json $GITHUB_WORKSPACE/$INSTANCE_DIR/
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4

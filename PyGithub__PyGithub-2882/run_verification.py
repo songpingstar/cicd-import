@@ -9,11 +9,11 @@ from typing import Union, List
 
 # --- 配置 ---
 # 请在这里设置你的代码仓库的绝对路径
-REPO_PATH = 'PyGithub'
+REPO_PATH = ''
 # 要进行测试的基础 commit 哈希
-BASE_COMMIT = '14af705195df8bf6557fae6fdd3afd198b92ba82'
+BASE_COMMIT = ''
 # 实例ID，用于结果文件的顶级键
-INSTANCE_ID = 'PyGithub__PyGithub-2882'
+INSTANCE_ID = ''
 
 
 # --- 路径配置 (自动计算) ---

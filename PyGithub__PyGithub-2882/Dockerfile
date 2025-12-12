@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python-is-python3 
 
 # 2. 安装Miniconda3（Python 3.11）
-RUN wget 'https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-x86_64.sh' -O miniconda.sh && \
+RUN wget 'MinicondaURL' -O miniconda.sh && \
     bash miniconda.sh -b -p /opt/miniconda3 && \
     rm -f miniconda.sh
 
