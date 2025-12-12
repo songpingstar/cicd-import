@@ -114,13 +114,13 @@ jobs:
         python --version
         
         # 使用 sed 替换变量值
-        sed -i "s|REPO_PATH = ''|REPO_PATH = '$REPO_DIR'|g" run_verification.py
-        sed -i "s|BASE_COMMIT = ''|BASE_COMMIT = '$base_commit'|g" run_verification.py
-        sed -i "s|INSTANCE_ID = ''|INSTANCE_ID = '$INSTANCE_DIR'|g" run_verification.py
+        sed -i "s|REPO_PATH = ''|REPO_PATH = '$REPO_DIR'|g" $GITHUB_WORKSPACE/$INSTANCE_DIR/run_verification.py
+        sed -i "s|BASE_COMMIT = ''|BASE_COMMIT = '$base_commit'|g" $GITHUB_WORKSPACE/$INSTANCE_DIR/run_verification.py
+        sed -i "s|INSTANCE_ID = ''|INSTANCE_ID = '$INSTANCE_DIR'|g" $GITHUB_WORKSPACE/$INSTANCE_DIR/run_verification.py
     
         # 验证替换结果
         echo "=== 替换后的变量值 ==="
-        grep -E "^(REPO_PATH|BASE_COMMIT|INSTANCE_ID) =" run_verification.py
+        grep -E "^(REPO_PATH|BASE_COMMIT|INSTANCE_ID) =" $GITHUB_WORKSPACE/$INSTANCE_DIR/run_verification.py
         
         
         echo "开始写入run_verification.sh 脚本====================="
