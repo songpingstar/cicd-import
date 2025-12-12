@@ -55,31 +55,35 @@ jobs:
         #!/bin/bash
         mkdir -p /testbed
         git clone $REPO_URL /testbed/$REPO_DIR
-        cd $INSTANCE_DIR/$REPO_DIR
+        cd /testbed/$REPO_DIR
         git checkout "$base_commit"
         cd ..
         EOF
+        
         echo "开始执行setup_repo.sh 脚本"
         sudo bash setup_repo.sh
-        #cp setup_repo.sh $INSTANCE_DIR/
+        
+        cp $GITHUB_WORKSPACE/setup_repo.sh $GITHUB_WORKSPACE/$INSTANCE_DIR/
 
     - name: setup_env
       run: |
         echo "python版本是："
         python --version
-        cd $INSTANCE_DIR/$REPO_DIR
+        
         echo "开始写入setup_env 文件====================="
         cat > setup_env.sh << EOF
         #!/bin/bash
+        cd /testbed/$REPO_DIR
         pip install -q --upgrade pip setuptools
         pip install -e .
         pip install -q -r requirements/test.txt
         pip install -q --upgrade pytest
-        #cd /testbed/$REPO_DIR
         EOF
+        
         echo "开始执行setup_env 脚本====================="
-        bash setup_env.sh
-        cp setup_env.sh ../
+        sudo bash setup_env.sh
+        
+        cp $GITHUB_WORKSPACE/setup_repo.sh $GITHUB_WORKSPACE/$INSTANCE_DIR/
     - name: run verification test
       run: |
         echo "python版本是："
@@ -87,11 +91,11 @@ jobs:
         echo "pytest版本是："
         pytest --version
 
-        cd $INSTANCE_DIR/$REPO_DIR
+        cd /testbed/$REPO_DIR
         pytest tests/Repository.py
-        git apply ../test.patch 
+        git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
         pytest tests/Repository.py || true
-        git apply ../code.patch 
+        git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/code.patch 
         pytest tests/Repository.py
         
     - name: run verification
