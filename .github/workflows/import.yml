@@ -110,6 +110,7 @@ jobs:
         python --version
         
         cd /testbed
+        cp $GITHUB_WORKSPACE/$INSTANCE_DIR/run_verification.py .
         python run_verification.py 
         
     - name: Upload test results
