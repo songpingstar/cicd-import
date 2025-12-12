@@ -137,6 +137,14 @@ jobs:
         
         cp /testbed/results.json $GITHUB_WORKSPACE/$INSTANCE_DIR/
         
+    - name: mergejson
+      run: |
+      
+        sed -i "s|INSTANCE_DIR|$INSTANCE_DIR|g" mergejson.py
+        
+        echo "开始执行mergejson.py 合并程序====================="
+        python mergejson.py
+        
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
