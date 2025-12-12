@@ -109,9 +109,15 @@ jobs:
         echo "python版本是："
         python --version
         
+        echo "开始写入run_verification.sh 脚本====================="
+        cat > run_verification.sh << EOF
         cd /testbed
         cp $GITHUB_WORKSPACE/$INSTANCE_DIR/run_verification.py .
         python run_verification.py 
+        EOF
+        
+        echo "开始执行run_verification.sh 脚本====================="
+        sudo bash run_verification.sh
         
     - name: Upload test results
       if: always()
