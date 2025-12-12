@@ -79,7 +79,7 @@ jobs:
         EOF
         echo "开始执行setup_env 脚本====================="
         bash setup_env.sh
-        cp setup_env.sh .../$INSTANCE_DIR/
+        cp setup_env.sh ../
     - name: run verification test
       run: |
         echo "python版本是："
