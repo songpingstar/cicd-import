@@ -61,7 +61,7 @@ jobs:
         EOF
         echo "开始执行setup_repo.sh 脚本"
         bash setup_repo.sh
-
+        cp setup_repo.sh $INSTANCE_DIR/
 
     - name: setup_env
       run: |
@@ -79,6 +79,7 @@ jobs:
         EOF
         echo "开始执行setup_env 脚本====================="
         bash setup_env.sh
+        cp setup_env.sh $INSTANCE_DIR/
     - name: run verification test
       run: |
         echo "python版本是："
@@ -110,7 +111,7 @@ jobs:
         path: |
             ${{ env.INSTANCE_DIR }}/results.json
             ${{ env.INSTANCE_DIR }}/Dockerfile
-            ${{ env.INSTANCE_DIR }}/${{ env.REPO_DIR }}/setup_env.sh
-            setup_repo.sh
+            ${{ env.INSTANCE_DIR }}/setup_env.sh
+            ${{ env.INSTANCE_DIR }}/setup_repo.sh
             ${{ env.INSTANCE_DIR }}/run_verification.py
             ${{ env.INSTANCE_DIR }}/${{ env.INSTANCE_DIR }}.json
