@@ -52,16 +52,16 @@ jobs:
       run: |
         echo "开始写入setup_repo.sh 文件====================="
         cat > setup_repo.sh << EOF
-            #!/bin/bash
-            #mkdir -p /testbed
-            git clone $REPO_URL $INSTANCE_DIR/$REPO_DIR
-            cd $INSTANCE_DIR/$REPO_DIR
-            git checkout "$base_commit"
-            #cd ..
+        #!/bin/bash
+        mkdir -p /testbed
+        git clone $REPO_URL /testbed/$REPO_DIR
+        cd $INSTANCE_DIR/$REPO_DIR
+        git checkout "$base_commit"
+        cd ..
         EOF
         echo "开始执行setup_repo.sh 脚本"
-        bash setup_repo.sh
-        cp setup_repo.sh $INSTANCE_DIR/
+        sudo bash setup_repo.sh
+        #cp setup_repo.sh $INSTANCE_DIR/
 
     - name: setup_env
       run: |
@@ -70,12 +70,12 @@ jobs:
         cd $INSTANCE_DIR/$REPO_DIR
         echo "开始写入setup_env 文件====================="
         cat > setup_env.sh << EOF
-            #!/bin/bash
-            pip install -q --upgrade pip setuptools
-            pip install -e .
-            pip install -q -r requirements/test.txt
-            pip install -q --upgrade pytest
-            #cd /testbed/$REPO_DIR
+        #!/bin/bash
+        pip install -q --upgrade pip setuptools
+        pip install -e .
+        pip install -q -r requirements/test.txt
+        pip install -q --upgrade pytest
+        #cd /testbed/$REPO_DIR
         EOF
         echo "开始执行setup_env 脚本====================="
         bash setup_env.sh
