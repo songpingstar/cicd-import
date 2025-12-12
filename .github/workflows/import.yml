@@ -49,6 +49,7 @@ jobs:
         python --version
         
         sed -i "s|MinicondaURL|$PY_URL|g" $GITHUB_WORKSPACE/$INSTANCE_DIR/Dockerfile
+        cp $GITHUB_WORKSPACE/$INSTANCE_DIR/Dockerfile $GITHUB_WORKSPACE/
         
     - name: setup_repo
       run: |
@@ -64,8 +65,7 @@ jobs:
         
         echo "开始执行setup_repo.sh 脚本"
         sudo bash setup_repo.sh
-        
-#        cp $GITHUB_WORKSPACE/setup_repo.sh $GITHUB_WORKSPACE/$INSTANCE_DIR/
+
 
     - name: setup_env
       run: |
@@ -84,8 +84,7 @@ jobs:
         
         echo "开始执行setup_env 脚本====================="
         sudo bash setup_env.sh
-        
-#        cp $GITHUB_WORKSPACE/setup_env.sh $GITHUB_WORKSPACE/$INSTANCE_DIR/
+
         
     - name: run pytest
       run: |
@@ -143,17 +142,18 @@ jobs:
         sed -i "s|INSTANCE_DIR|$INSTANCE_DIR|g" mergejson.py
         
         echo "开始执行mergejson.py 合并程序====================="
+        cp $INSTANCE_DIR/$INSTANCE_DIR.json $GITHUB_WORKSPACE/
         python mergejson.py
         
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: test-results
+        name: ${{ env.INSTANCE_DIR }}
         path: |
-            ${{ env.INSTANCE_DIR }}/results.json
-            ${{ env.INSTANCE_DIR }}/Dockerfile
-            ${{ env.INSTANCE_DIR }}/setup_env.sh
-            ${{ env.INSTANCE_DIR }}/setup_repo.sh
-            ${{ env.INSTANCE_DIR }}/run_verification.py
-            ${{ env.INSTANCE_DIR }}/${{ env.INSTANCE_DIR }}.json
+            results.json
+            Dockerfile
+            setup_env.sh
+            setup_repo.sh
+            run_verification.py
+            ${{ env.INSTANCE_DIR }}.json
