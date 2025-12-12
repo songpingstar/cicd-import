@@ -84,7 +84,7 @@ jobs:
         sudo bash setup_env.sh
         
         cp $GITHUB_WORKSPACE/setup_repo.sh $GITHUB_WORKSPACE/$INSTANCE_DIR/
-    - name: run verification test
+    - name: run pytest
       run: |
         echo "python版本是："
         python --version
@@ -113,6 +113,8 @@ jobs:
         cat > run_verification.sh << EOF
         cd /testbed
         cp $GITHUB_WORKSPACE/$INSTANCE_DIR/run_verification.py .
+        cp $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch .
+        cp $GITHUB_WORKSPACE/$INSTANCE_DIR/code.patch .
         python run_verification.py 
         EOF
         
