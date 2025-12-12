@@ -151,7 +151,6 @@ jobs:
       with:
         name: ${{ env.INSTANCE_DIR }}
         path: |
-#            results.json
             Dockerfile
             setup_env.sh
             setup_repo.sh
