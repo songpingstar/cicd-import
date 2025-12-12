@@ -90,22 +90,27 @@ jobs:
         python --version
         echo "pytest版本是："
         pytest --version
-
-        sudo cd /testbed/$REPO_DIR
-        sudo pytest tests/Repository.py
-        sudo git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
-        sudo pytest tests/Repository.py || true
-        sudo git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/code.patch 
-        sudo pytest tests/Repository.py
         
+        echo "开始写入pytest.sh 脚本====================="
+        cat > pytest.sh << EOF
+        cd /testbed/$REPO_DIR
+        pytest tests/Repository.py
+        git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
+        pytest tests/Repository.py || true
+        git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/code.patch 
+        pytest tests/Repository.py
+        EOF
+        
+        echo "开始执行pytest.sh 脚本====================="
+        sudo bash pytest.sh
     - name: run verification
       continue-on-error: true
       run: |
         echo "python版本是："
         python --version
         
-        sudo cd /testbed
-        sudo python run_verification.py 
+        cd /testbed
+        python run_verification.py 
         
     - name: Upload test results
       if: always()
