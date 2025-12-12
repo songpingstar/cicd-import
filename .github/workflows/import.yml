@@ -47,7 +47,9 @@ jobs:
         conda config --add channels conda-forge
         echo "python版本是："
         python --version
-        sed -i "s/MinicondaURL/$PY_URL/g" $GITHUB_WORKSPACE/$INSTANCE_DIR/Dockerfile
+        
+        sed -i "s|MinicondaURL|$PY_URL|g" $GITHUB_WORKSPACE/$INSTANCE_DIR/Dockerfile
+        
     - name: setup_repo
       run: |
         echo "开始写入setup_repo.sh 文件====================="
@@ -84,6 +86,7 @@ jobs:
         sudo bash setup_env.sh
         
         cp $GITHUB_WORKSPACE/setup_env.sh $GITHUB_WORKSPACE/$INSTANCE_DIR/
+        
     - name: run pytest
       run: |
         echo "python版本是："
@@ -103,6 +106,7 @@ jobs:
         
         echo "开始执行pytest.sh 脚本====================="
         sudo bash pytest.sh
+        
     - name: run verification
       continue-on-error: true
       run: |
@@ -132,6 +136,7 @@ jobs:
         sudo bash run_verification.sh
         
         cp /testbed/results.json $GITHUB_WORKSPACE/$INSTANCE_DIR/
+        
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
