@@ -14,7 +14,7 @@ env:
   CONDA_DIR: /opt/miniconda3
 
 jobs:
-  setup-build:
+  pytest-verification:
     name: Setup, Build
     runs-on: ubuntu-22.04
     environment: production
@@ -151,7 +151,7 @@ jobs:
       with:
         name: ${{ env.INSTANCE_DIR }}
         path: |
-            results.json
+#            results.json
             Dockerfile
             setup_env.sh
             setup_repo.sh
