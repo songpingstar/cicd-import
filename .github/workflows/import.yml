@@ -32,6 +32,8 @@ jobs:
         cat > setup_env.sh << EOF
         #!/bin/bash
         cd /testbed/$REPO_DIR
+        git submodule sync
+        git submodule update --init --recursive --checkout
         apt-get install g++ cmake bison flex ninja-build
         pip install -q --upgrade pip setuptools
         pip install -e .
