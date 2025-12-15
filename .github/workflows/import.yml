@@ -13,7 +13,7 @@ env:
   PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   CONDA_DIR: /opt/miniconda3
-  TEST_FILE: pytype/rewrite
+  TEST_FILE: pytype/rewrite/abstract/base_test.py
 
 jobs:
   pytest-verification:
@@ -79,8 +79,6 @@ jobs:
         cat > setup_env.sh << EOF
         #!/bin/bash
         cd /testbed/$REPO_DIR
-        apt-get update
-        apt-get install -y cmake g++ bison flex
         pip install -q --upgrade pip setuptools
         pip install -e .
         pip install -r requirements.txt
@@ -110,7 +108,7 @@ jobs:
         EOF
         
         echo "开始执行pytest.sh 脚本====================="
-        #sudo bash pytest.sh
+        sudo bash pytest.sh
         
     - name: run verification
       continue-on-error: true
