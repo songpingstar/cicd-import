@@ -60,15 +60,25 @@ jobs:
 
     - name: Install Miniconda
       run: |
+        echo "开始写入installconda.sh 文件====================="
+        cat > installconda.sh << EOF
+        #!/bin/bash
         wget -q $PY_URL -O miniconda.sh
         bash miniconda.sh -b -p $CONDA_DIR
         rm miniconda.sh
         PATH=/opt/miniconda3/bin:${PATH}
         echo "/opt/miniconda3/bin" >> $GITHUB_PATH
-        source ~/.bashrc
+        conda init bash
         conda config --add channels conda-forge
+        conda config --remove channels defaults
+        echo "conda activate testbed" >> /root/.bashrc
+        source /root/.bashrc
         echo "python版本是："
         python --version
+        EOF
+        
+        echo "开始执行installconda.sh 文件====================="
+        sudo bash installconda.sh
         
         sed -i "s|MinicondaURL|$PY_URL|g" $GITHUB_WORKSPACE/Dockerfile
       
@@ -95,6 +105,7 @@ jobs:
         python --version
     
         echo "开始执行setup_env 脚本====================="
+        sudo source /root/.bashrc
         sudo bash setup_env.sh
 
         
@@ -104,7 +115,8 @@ jobs:
         python --version
         echo "pytest版本是："
         pytest --version
-        
+        echo "pytest路径是："
+        which pytest
         echo "开始写入pytest.sh 脚本====================="
         cat > pytest.sh << EOF
         cd /testbed/$REPO_DIR
