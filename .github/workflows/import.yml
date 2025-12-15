@@ -5,14 +5,14 @@ on:
     branches: [main]
 
 env:
-  REPO_URL: https://github.com/PyCQA/bandit.git
-  INSTANCE_DIR: PyCQA__bandit-1018
-  REPO_DIR: PyCQA/bandit
-  base_commit: 36fc7be5fdca6cdb2c75b31172e8b0e20e8e1579
+  REPO_URL: https://github.com/CTFd/CTFd.git
+  INSTANCE_DIR: CTFd__CTFd-2797
+  REPO_DIR: CTFd/CTFd
+  base_commit: e1f342b1624e66cd30f5963dba85af39008ff5d9
 #  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
   PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
   CONDA_DIR: /opt/miniconda3
-  TEST_FILE: tests/functional/test_functional.py
+  TEST_FILE: tests
 
 jobs:
   pytest-verification:
@@ -36,6 +36,9 @@ jobs:
         # python3 \
         # python3-pip \
         # python-is-python3 
+        build-essential \
+        libffi-dev \
+        libssl-dev \
 
     - name: Install Miniconda
       run: |
@@ -79,8 +82,8 @@ jobs:
         cd /testbed/$REPO_DIR
         pip install -q --upgrade pip setuptools
         pip install -e .
-        #pip install -r requirements.txt
-        pip install -q -r test-requirements.txt
+        pip install -r requirements.txt
+        #pip install -q -r test-requirements.txt
         pip install -q --upgrade pytest
         EOF
         
