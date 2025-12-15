@@ -70,13 +70,6 @@ jobs:
         rm miniconda.sh
         PATH=/opt/miniconda3/bin:${PATH}
         echo "/opt/miniconda3/bin" >> $GITHUB_PATH
-        #conda init bash
-        #conda config --add channels conda-forge
-        #conda config --remove channels defaults
-        #echo "conda activate testbed" >> /root/.bashrc
-        #source /root/.bashrc
-        #source /opt/miniconda3/etc/profile.d/conda.sh
-        #conda activate base
         echo "python版本是："
         python --version
         EOF
@@ -112,6 +105,8 @@ jobs:
     
         echo "开始执行setup_env 脚本====================="
         sudo bash setup_env.sh
+        sed -i '/source \/opt\/miniconda3\/etc\/profile.d\/conda.sh/d' setup_env.sh
+        sed -i '/conda activate base/d' setup_env.sh
 
         
     - name: run pytest
