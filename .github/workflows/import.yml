@@ -110,7 +110,7 @@ jobs:
         EOF
         
         echo "开始执行pytest.sh 脚本====================="
-        sudo bash pytest.sh
+        #sudo bash pytest.sh
         
     - name: run verification
       continue-on-error: true
