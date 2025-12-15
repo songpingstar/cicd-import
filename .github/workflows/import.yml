@@ -124,6 +124,7 @@ jobs:
         which pytest
         echo "开始写入pytest.sh 脚本====================="
         cat > pytest.sh << EOF
+        #!/bin/bash
         cd /testbed/$REPO_DIR
         pytest $TEST_FILE
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
