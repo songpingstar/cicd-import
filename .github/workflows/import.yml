@@ -105,7 +105,7 @@ jobs:
         python --version
     
         echo "开始执行setup_env 脚本====================="
-        sudo source /root/.bashrc
+        #sudo source /root/.bashrc
         sudo bash setup_env.sh
 
         
