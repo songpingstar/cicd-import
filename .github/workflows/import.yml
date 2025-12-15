@@ -12,6 +12,7 @@ env:
 #  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
   PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
   CONDA_DIR: /opt/miniconda3
+  TEST_FILE: tests/functional/test_functional.py
 
 jobs:
   pytest-verification:
@@ -97,11 +98,11 @@ jobs:
         echo "开始写入pytest.sh 脚本====================="
         cat > pytest.sh << EOF
         cd /testbed/$REPO_DIR
-        pytest tests/functional/test_functional.py
+        pytest $TEST_FILE
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
-        pytest tests/functional/test_functional.py || true
+        pytest $TEST_FILE || true
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/code.patch 
-        pytest tests/functional/test_functional.py
+        pytest $TEST_FILE
         EOF
         
         echo "开始执行pytest.sh 脚本====================="
