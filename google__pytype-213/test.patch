@@ -1,0 +1,30 @@
+diff --git a/pytype/tools/analyze_project/pytype_runner_test.py b/pytype/tools/analyze_project/pytype_runner_test.py
+index 11ae340da..bf4f254a8 100644
+--- a/pytype/tools/analyze_project/pytype_runner_test.py
++++ b/pytype/tools/analyze_project/pytype_runner_test.py
+@@ -252,10 +252,6 @@ def test_generate_default(self):
+         runner.get_module_action(Module('', 'foo.py', 'foo', 'System')),
+         pytype_runner.Action.GENERATE_DEFAULT)
+ 
+-  def test_skip(self):
+-    runner = make_runner([], [], self.parser.config_from_defaults())
+-    self.assertIsNone(runner.get_module_action(Module('', 'foo.cc', 'foo')))
+-
+ 
+ class TestYieldSortedModules(TestBase):
+   """Tests for PytypeRunner.yield_sorted_modules()."""
+@@ -320,14 +316,6 @@ def test_cycle(self):
+          (dep, Action.INFER, (dep, src), Stage.SECOND_PASS),
+          (src, Action.CHECK, (dep, src), Stage.SECOND_PASS)])
+ 
+-  def test_non_py_dep(self):
+-    conf = self.parser.config_from_defaults()
+-    d = self.normalize('foo/')
+-    conf.pythonpath = [d]
+-    dep = Module(d, 'bar.so', 'bar')
+-    runner = make_runner([], [((dep,), ())], conf)
+-    self.assert_sorted_modules_equal(runner.yield_sorted_modules(), [])
+-
+   def test_system_dep(self):
+     conf = self.parser.config_from_defaults()
+     d = self.normalize('foo/')
