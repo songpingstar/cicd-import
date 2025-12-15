@@ -48,8 +48,8 @@ jobs:
         echo "python版本是："
         python --version
         
-        sed -i "s|MinicondaURL|$PY_URL|g" $GITHUB_WORKSPACE/$INSTANCE_DIR/Dockerfile
-        cp $GITHUB_WORKSPACE/$INSTANCE_DIR/Dockerfile $GITHUB_WORKSPACE/
+        sed -i "s|MinicondaURL|$PY_URL|g" $GITHUB_WORKSPACE/Dockerfile
+      
         
     - name: setup_repo
       run: |
