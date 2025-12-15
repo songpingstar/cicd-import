@@ -5,17 +5,17 @@ on:
     branches: [main]
 
 env:
-  REPO_URL: https://github.com/PyGithub/PyGithub.git
-  INSTANCE_DIR: PyGithub__PyGithub-2882
-  REPO_DIR: PyGithub
-  base_commit: 14af705195df8bf6557fae6fdd3afd198b92ba82
+  REPO_URL: https://github.com/PyCQA/bandit.git
+  INSTANCE_DIR: PyCQA__bandit-1018
+  REPO_DIR: PyCQA/bandit
+  base_commit: 36fc7be5fdca6cdb2c75b31172e8b0e20e8e1579
 #  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
   PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
   CONDA_DIR: /opt/miniconda3
 
 jobs:
   pytest-verification:
-    name: Setup, Build
+    name: pytest-verification
     runs-on: ubuntu-22.04
     environment: production
     
@@ -78,7 +78,8 @@ jobs:
         cd /testbed/$REPO_DIR
         pip install -q --upgrade pip setuptools
         pip install -e .
-        pip install -q -r requirements/test.txt
+        #pip install -r requirements.txt
+        pip install -q -r test-requirements.txt
         pip install -q --upgrade pytest
         EOF
         
@@ -96,11 +97,11 @@ jobs:
         echo "开始写入pytest.sh 脚本====================="
         cat > pytest.sh << EOF
         cd /testbed/$REPO_DIR
-        pytest tests/Repository.py
+        pytest tests/functional/test_functional.py
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
-        pytest tests/Repository.py || true
+        pytest tests/functional/test_functional.py || true
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/code.patch 
-        pytest tests/Repository.py
+        pytest tests/functional/test_functional.py
         EOF
         
         echo "开始执行pytest.sh 脚本====================="

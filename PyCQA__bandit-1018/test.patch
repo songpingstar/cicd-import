@@ -1,0 +1,38 @@
+diff --git a/tests/functional/test_functional.py b/tests/functional/test_functional.py
+index bc8689396..9f52e910e 100644
+--- a/tests/functional/test_functional.py
++++ b/tests/functional/test_functional.py
+@@ -113,14 +113,14 @@ def test_crypto_md5(self):
+                 "SEVERITY": {
+                     "UNDEFINED": 0,
+                     "LOW": 0,
+-                    "MEDIUM": 10,
++                    "MEDIUM": 16,
+                     "HIGH": 9,
+                 },
+                 "CONFIDENCE": {
+                     "UNDEFINED": 0,
+                     "LOW": 0,
+                     "MEDIUM": 0,
+-                    "HIGH": 19,
++                    "HIGH": 25,
+                 },
+             }
+         else:
+@@ -128,14 +128,14 @@ def test_crypto_md5(self):
+                 "SEVERITY": {
+                     "UNDEFINED": 0,
+                     "LOW": 0,
+-                    "MEDIUM": 16,
++                    "MEDIUM": 22,
+                     "HIGH": 4,
+                 },
+                 "CONFIDENCE": {
+                     "UNDEFINED": 0,
+                     "LOW": 0,
+                     "MEDIUM": 0,
+-                    "HIGH": 20,
++                    "HIGH": 26,
+                 },
+             }
+         self.check_example("crypto-md5.py", expect)
