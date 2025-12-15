@@ -33,7 +33,7 @@ jobs:
         #!/bin/bash
         cd /testbed/$REPO_DIR
         source /opt/miniconda3/etc/profile.d/conda.sh
-        conda activate testdb
+        conda activate base
         git submodule sync
         git submodule update --init --recursive --checkout
         apt-get install g++ cmake bison flex ninja-build
@@ -75,8 +75,8 @@ jobs:
         #conda config --remove channels defaults
         #echo "conda activate testbed" >> /root/.bashrc
         #source /root/.bashrc
-        source /opt/miniconda3/etc/profile.d/conda.sh
-        conda activate base
+        #source /opt/miniconda3/etc/profile.d/conda.sh
+        #conda activate base
         echo "python版本是："
         python --version
         EOF
@@ -111,7 +111,6 @@ jobs:
         which pip
     
         echo "开始执行setup_env 脚本====================="
-        #sudo source /root/.bashrc
         sudo bash setup_env.sh
 
         
