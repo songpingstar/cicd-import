@@ -24,6 +24,22 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      
+      
+    - name: write setup_env
+      run: |
+        echo "开始写入setup_env 文件====================="
+        cat > setup_env.sh << EOF
+        #!/bin/bash
+        cd /testbed/$REPO_DIR
+        git submodule sync
+        git submodule update --init --recursive --checkout
+        pip install -q --upgrade pip setuptools
+        pip install -e .
+        pip install -r requirements.txt
+        #pip install -q -r test-requirements.txt
+        pip install -q --upgrade pytest
+        EOF
 
     - name: Install system dependencies
       run: |
@@ -74,18 +90,7 @@ jobs:
       run: |
         echo "python版本是："
         python --version
-        
-        echo "开始写入setup_env 文件====================="
-        cat > setup_env.sh << EOF
-        #!/bin/bash
-        cd /testbed/$REPO_DIR
-        pip install -q --upgrade pip setuptools
-        pip install -e .
-        pip install -r requirements.txt
-        #pip install -q -r test-requirements.txt
-        pip install -q --upgrade pytest
-        EOF
-        
+    
         echo "开始执行setup_env 脚本====================="
         sudo bash setup_env.sh
 
