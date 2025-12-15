@@ -122,7 +122,7 @@ def parse_junit_xml_report(report_path: Path) -> dict | None:
     return test_results
 
 def run_all_tests_and_get_results():
-    """使用 poetry run pytest 运行所有测试并从 JUnit XML 报告中解析结果。"""
+    """使用 pytest 运行所有测试并从 JUnit XML 报告中解析结果。不一定一定要pytest"""
     # TODO
 
 def write_results_and_exit(success=True):
