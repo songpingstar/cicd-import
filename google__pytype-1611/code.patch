@@ -1,0 +1,1560 @@
+diff --git a/pytype/rewrite/CMakeLists.txt b/pytype/rewrite/CMakeLists.txt
+index d5cf6f005..1285e05fe 100644
+--- a/pytype/rewrite/CMakeLists.txt
++++ b/pytype/rewrite/CMakeLists.txt
+@@ -48,7 +48,6 @@ py_library(
+     pytype.config
+     pytype.load_pytd
+     pytype.errors.errors
+-    pytype.rewrite.abstract.abstract
+ )
+ 
+ py_library(
+@@ -105,6 +104,7 @@ py_library(
+     load_abstract.py
+   DEPS
+     pytype.load_pytd
++    pytype.pytd.pytd
+     pytype.rewrite.abstract.abstract
+     pytype.rewrite.overlays.overlays
+ )
+@@ -115,6 +115,7 @@ py_test(
+   SRCS
+     load_abstract_test.py
+   DEPS
++    pytype.rewrite.abstract.abstract
+     pytype.rewrite.tests.test_utils
+ )
+ 
+@@ -169,7 +170,6 @@ py_test(
+     stack_test.py
+   DEPS
+     .stack
+-    pytype.rewrite.abstract.abstract
+     pytype.rewrite.tests.test_utils
+ )
+ 
+diff --git a/pytype/rewrite/abstract/CMakeLists.txt b/pytype/rewrite/abstract/CMakeLists.txt
+index becf6821a..582d9927a 100644
+--- a/pytype/rewrite/abstract/CMakeLists.txt
++++ b/pytype/rewrite/abstract/CMakeLists.txt
+@@ -90,7 +90,6 @@ py_library(
+     instances.py
+   DEPS
+     .base
+-    .classes
+ )
+ 
+ py_test(
+@@ -100,7 +99,6 @@ py_test(
+     instances_test.py
+   DEPS
+     .base
+-    .classes
+     .instances
+     pytype.rewrite.tests.test_utils
+ )
+@@ -120,7 +118,6 @@ py_test(
+   SRCS
+     internal_test.py
+   DEPS
+-    .classes
+     .internal
+     pytype.rewrite.tests.test_utils
+ )
+@@ -132,7 +129,6 @@ py_library(
+     utils.py
+   DEPS
+     .base
+-    .classes
+ )
+ 
+ py_test(
+@@ -142,7 +138,6 @@ py_test(
+     utils_test.py
+   DEPS
+     .base
+-    .classes
+     .utils
+     pytype.rewrite.tests.test_utils
+ )
+diff --git a/pytype/rewrite/abstract/abstract.py b/pytype/rewrite/abstract/abstract.py
+index 2752c9451..54841ff99 100644
+--- a/pytype/rewrite/abstract/abstract.py
++++ b/pytype/rewrite/abstract/abstract.py
+@@ -9,8 +9,8 @@
+ 
+ BaseValue = _base.BaseValue
+ ContextType = _base.ContextType
++PythonConstant = _base.PythonConstant
+ Singleton = _base.Singleton
+-Singletons = _base.Singletons
+ Union = _base.Union
+ 
+ SimpleClass = _classes.SimpleClass
+@@ -18,7 +18,6 @@
+ FrozenInstance = _classes.FrozenInstance
+ InterpreterClass = _classes.InterpreterClass
+ MutableInstance = _classes.MutableInstance
+-PythonConstant = _classes.PythonConstant
+ 
+ Args = _functions.Args
+ BaseFunction = _functions.BaseFunction
+@@ -34,6 +33,7 @@
+ Dict = _instances.Dict
+ List = _instances.List
+ Set = _instances.Set
++Tuple = _instances.Tuple
+ 
+ ConstKeyDict = _internal.ConstKeyDict
+ Splat = _internal.Splat
+diff --git a/pytype/rewrite/abstract/base.py b/pytype/rewrite/abstract/base.py
+index 8006630d4..7d626b3f1 100644
+--- a/pytype/rewrite/abstract/base.py
++++ b/pytype/rewrite/abstract/base.py
+@@ -1,8 +1,7 @@
+ """Base abstract representation of Python values."""
+ 
+ import abc
+-import dataclasses
+-from typing import Any, Dict, Optional, Protocol, Sequence, Tuple
++from typing import Any, Generic, Optional, Protocol, Sequence, Tuple, TypeVar
+ 
+ from pytype import config
+ from pytype import load_pytd
+@@ -12,22 +11,7 @@
+ from pytype.types import types
+ from typing_extensions import Self
+ 
+-
+-@dataclasses.dataclass(init=False)
+-class Singletons:
+-  """Singleton abstract values."""
+-
+-  # For readability, we give these the same name as the value they represent.
+-  # pylint: disable=invalid-name
+-  Any: 'Singleton'
+-  __build_class__: 'Singleton'
+-  Never: 'Singleton'
+-  NULL: 'Singleton'
+-  # pylint: enable=invalid-name
+-
+-  def __init__(self, ctx: 'ContextType'):
+-    for field in dataclasses.fields(self):
+-      setattr(self, field.name, Singleton(ctx, field.name))
++_T = TypeVar('_T')
+ 
+ 
+ class ContextType(Protocol):
+@@ -35,16 +19,21 @@ class ContextType(Protocol):
+   options: config.Options
+   pytd_loader: load_pytd.Loader
+ 
+-  singles: Singletons
+   errorlog: Any
+   abstract_converter: Any
+   abstract_loader: Any
+   pytd_converter: Any
++  consts: Any
+ 
+ 
+ class BaseValue(types.BaseValue, abc.ABC):
+   """Base class for abstract values."""
+ 
++  # For convenience, we want the 'name' attribute to be available on all values.
++  # Setting it as a class attribute gives subclasses the most flexibility in how
++  # to define it.
++  name = ''
++
+   def __init__(self, ctx: ContextType):
+     self._ctx = ctx
+ 
+@@ -62,14 +51,18 @@ def _attrs(self) -> Tuple[Any, ...]:
+     `self._ctx`.
+     """
+ 
++  @property
++  def full_name(self):
++    return self.name
++
+   def __eq__(self, other):
+     return self.__class__ == other.__class__ and self._attrs == other._attrs
+ 
+   def __hash__(self):
+     return hash((self.__class__, self._ctx) + self._attrs)
+ 
+-  def to_variable(self: Self) -> variables.Variable[Self]:
+-    return variables.Variable.from_value(self)
++  def to_variable(self, name: Optional[str] = None) -> variables.Variable[Self]:
++    return variables.Variable.from_value(self, name=name)
+ 
+   def get_attribute(self, name: str) -> Optional['BaseValue']:
+     del name  # unused
+@@ -92,21 +85,44 @@ def to_pytd_type_of_instance(self) -> pytd.Type:
+     return self._ctx.pytd_converter.to_pytd_type_of_instance(self)
+ 
+ 
++class PythonConstant(BaseValue, Generic[_T]):
++  """Representation of a Python constant.
++
++  DO NOT INSTANTIATE THIS CLASS DIRECTLY! Doing so will create extra copies of
++  constants, potentially causing subtle bugs. Instead, fetch the canonical
++  instance of the constant using ctx.consts[constant].
++  """
++
++  def __init__(
++      self, ctx: ContextType, constant: _T, allow_direct_instantiation=False):
++    if self.__class__ is PythonConstant and not allow_direct_instantiation:
++      raise ValueError('Do not instantiate PythonConstant directly. Use '
++                       'ctx.consts[constant] instead.')
++    super().__init__(ctx)
++    self.constant = constant
++
++  def __repr__(self):
++    return f'PythonConstant({self.constant!r})'
++
++  @property
++  def _attrs(self):
++    return (self.constant,)
++
++
+ class Singleton(BaseValue):
+-  """Singleton value."""
++  """Singleton value.
+ 
+-  _INSTANCES: Dict[Tuple[ContextType, str], 'Singleton'] = {}
+-  name: str
++  DO NOT INSTANTIATE THIS CLASS DIRECTLY! Doing so will create extra copies of
++  singletons, potentially causing subtle bugs. Instead, fetch the canonical
++  instance of the singleton using ctx.consts.singles[name].
++  """
+ 
+-  def __new__(cls, ctx: ContextType, name: str):
+-    key = (ctx, name)
+-    if key in cls._INSTANCES:
+-      return cls._INSTANCES[key]
+-    self = super().__new__(cls)
+-    cls._INSTANCES[key] = self
+-    return self
++  name: str
+ 
+-  def __init__(self, ctx, name):
++  def __init__(self, ctx, name, allow_direct_instantiation=False):
++    if self.__class__ is Singleton and not allow_direct_instantiation:
++      raise ValueError('Do not instantiate Singleton directly. Use '
++                       'ctx.consts.singles[name] instead.')
+     super().__init__(ctx)
+     self.name = name
+ 
+diff --git a/pytype/rewrite/abstract/classes.py b/pytype/rewrite/abstract/classes.py
+index dca55c95a..26b0b8891 100644
+--- a/pytype/rewrite/abstract/classes.py
++++ b/pytype/rewrite/abstract/classes.py
+@@ -4,7 +4,7 @@
+ import dataclasses
+ import logging
+ 
+-from typing import Dict, Generic, List, Mapping, Optional, Protocol, Sequence, TypeVar
++from typing import Dict, List, Mapping, Optional, Protocol, Sequence
+ 
+ import immutabledict
+ from pytype.rewrite.abstract import base
+@@ -12,8 +12,6 @@
+ 
+ log = logging.getLogger(__name__)
+ 
+-_T = TypeVar('_T')
+-
+ 
+ class _HasMembers(Protocol):
+ 
+@@ -43,6 +41,14 @@ def __init__(
+     self.name = name
+     self.members = members
+     self.module = module
++    self._canonical_instance: Optional['FrozenInstance'] = None
++
++    if isinstance((init := members.get('__init__')),
++                  functions_lib.SimpleFunction):
++      # An __init__ method is required to return None.
++      for sig in init.signatures:
++        if 'return' not in sig.annotations:
++          sig.annotations['return'] = ctx.consts[None]
+ 
+     # These methods are attributes of individual classes so that they can be
+     # easily customized. For example, unittest.TestCase would want to add
+@@ -56,38 +62,53 @@ def __init__(
+     self.initializers = ['__init__']
+ 
+   def __repr__(self):
+-    return f'SimpleClass({self.name})'
++    return f'SimpleClass({self.full_name})'
+ 
+   @property
+   def _attrs(self):
+-    return (self.name, immutabledict.immutabledict(self.members))
++    return (self.module, self.name)
++
++  @property
++  def full_name(self):
++    if self.module:
++      return f'{self.module}.{self.name}'
++    else:
++      return self.name
+ 
+   def get_attribute(self, name: str) -> Optional[base.BaseValue]:
+     return self.members.get(name)
+ 
++  def set_attribute(self, name: str, value: base.BaseValue) -> None:
++    # SimpleClass is used to model imported classes, which we treat as frozen.
++    log.info('Ignoring attribute set on %r: %s -> %r',
++             self, name, value)
++
+   def instantiate(self) -> 'FrozenInstance':
+     """Creates an instance of this class."""
++    log.info('Instantiating class %s', self.full_name)
++    if self._canonical_instance:
++      log.info('Reusing cached instance of class %s', self.full_name)
++      return self._canonical_instance
+     for setup_method_name in self.setup_methods:
+       setup_method = self.get_attribute(setup_method_name)
+       if isinstance(setup_method, functions_lib.InterpreterFunction):
+         _ = setup_method.bind_to(self).analyze()
+     constructor = self.get_attribute(self.constructor)
+     if constructor:
+-      raise NotImplementedError('Custom __new__')
+-    else:
+-      instance = MutableInstance(self._ctx, self)
++      log.error('Custom __new__ not yet implemented')
++    instance = MutableInstance(self._ctx, self)
+     for initializer_name in self.initializers:
+       initializer = self.get_attribute(initializer_name)
+       if isinstance(initializer, functions_lib.InterpreterFunction):
+         _ = initializer.bind_to(instance).analyze()
+-    return instance.freeze()
++    self._canonical_instance = frozen_instance = instance.freeze()
++    return frozen_instance
+ 
+   def call(self, args: functions_lib.Args) -> ClassCallReturn:
+     constructor = self.get_attribute(self.constructor)
+     if constructor:
+-      raise NotImplementedError('Custom __new__')
+-    else:
+-      instance = MutableInstance(self._ctx, self)
++      log.error('Custom __new__ not yet implemented')
++    instance = MutableInstance(self._ctx, self)
+     for initializer_name in self.initializers:
+       initializer = self.get_attribute(initializer_name)
+       if isinstance(initializer, functions_lib.InterpreterFunction):
+@@ -112,6 +133,10 @@ def __init__(
+   def __repr__(self):
+     return f'InterpreterClass({self.name})'
+ 
++  @property
++  def _attrs(self):
++    return (self.name, immutabledict.immutabledict(self.members))
++
+ 
+ class BaseInstance(base.BaseValue):
+   """Instance of a class."""
+@@ -126,10 +151,6 @@ def __init__(self, ctx: base.ContextType, cls: SimpleClass, members):
+   @abc.abstractmethod
+   def set_attribute(self, name: str, value: base.BaseValue) -> None: ...
+ 
+-  @property
+-  def _attrs(self):
+-    return (self.cls, immutabledict.immutabledict(self.members))
+-
+   def get_attribute(self, name: str) -> Optional[base.BaseValue]:
+     if name in self.members:
+       return self.members[name]
+@@ -139,26 +160,6 @@ def get_attribute(self, name: str) -> Optional[base.BaseValue]:
+     return cls_attribute
+ 
+ 
+-class PythonConstant(BaseInstance, Generic[_T]):
+-  """Representation of a Python constant."""
+-
+-  def __init__(self, ctx: base.ContextType, constant: _T):
+-    cls = ctx.abstract_loader.raw_type_to_value(type(constant))
+-    super().__init__(ctx, cls, {})
+-    self.constant = constant
+-
+-  def __repr__(self):
+-    return f'PythonConstant({self.constant!r})'
+-
+-  @property
+-  def _attrs(self):
+-    return (self.constant,)
+-
+-  def set_attribute(self, name: str, value: base.BaseValue) -> None:
+-    # TODO(b/241479600): Log an error.
+-    raise NotImplementedError('Cannot set attribute on a constant')
+-
+-
+ class MutableInstance(BaseInstance):
+   """Instance of a class."""
+ 
+@@ -170,6 +171,10 @@ def __init__(self, ctx: base.ContextType, cls: SimpleClass):
+   def __repr__(self):
+     return f'MutableInstance({self.cls.name})'
+ 
++  @property
++  def _attrs(self):
++    return (self.cls, immutabledict.immutabledict(self.members))
++
+   def set_attribute(self, name: str, value: base.BaseValue) -> None:
+     if name in self.members:
+       self.members[name] = base.Union(self._ctx, (self.members[name], value))
+@@ -194,6 +199,12 @@ def __init__(self, ctx: base.ContextType, instance: MutableInstance):
+   def __repr__(self):
+     return f'FrozenInstance({self.cls.name})'
+ 
++  @property
++  def _attrs(self):
++    # Since a FrozenInstance is the canonical instance of its class and cannot
++    # change, the hash of the class is enough to uniquely identify it.
++    return (self.cls,)
++
+   def set_attribute(self, name: str, value: base.BaseValue) -> None:
+     # The VM may try to set an attribute on a frozen instance in the process of
+     # analyzing a class's methods. This is fine; we just ignore it.
+diff --git a/pytype/rewrite/abstract/functions.py b/pytype/rewrite/abstract/functions.py
+index 997df38dd..75de709b9 100644
+--- a/pytype/rewrite/abstract/functions.py
++++ b/pytype/rewrite/abstract/functions.py
+@@ -17,6 +17,7 @@
+ 
+ import abc
+ import dataclasses
++import logging
+ from typing import Dict, Generic, Mapping, Optional, Protocol, Sequence, Tuple, TypeVar
+ 
+ import immutabledict
+@@ -24,6 +25,8 @@
+ from pytype.pytd import pytd
+ from pytype.rewrite.abstract import base
+ 
++log = logging.getLogger(__name__)
++
+ _EMPTY_MAP = immutabledict.immutabledict()
+ _ArgDict = Dict[str, base.AbstractVariableType]
+ 
+@@ -31,6 +34,7 @@
+ class FrameType(Protocol):
+   """Protocol for a VM frame."""
+ 
++  name: str
+   final_locals: Mapping[str, base.BaseValue]
+   stack: Sequence['FrameType']
+ 
+@@ -51,7 +55,8 @@ def get_return_value(self) -> base.BaseValue: ...
+ @dataclasses.dataclass
+ class Args(Generic[_FrameT]):
+   """Arguments to one function call."""
+-  posargs: Sequence[base.AbstractVariableType] = ()
++  posargs: Tuple[base.AbstractVariableType, ...] = ()
++  kwargs: Mapping[str, base.AbstractVariableType] = _EMPTY_MAP
+   frame: Optional[_FrameT] = None
+ 
+ 
+@@ -228,6 +233,7 @@ def fmt(param_name):
+   def map_args(self, args: Args[_FrameT]) -> MappedArgs[_FrameT]:
+     # TODO(b/241479600): Implement this properly, with error detection.
+     argdict = dict(zip(self.param_names, args.posargs))
++    argdict.update(args.kwargs)
+     return MappedArgs(signature=self, argdict=argdict, frame=args.frame)
+ 
+   def make_fake_args(self) -> MappedArgs[FrameType]:
+@@ -236,7 +242,10 @@ def make_fake_args(self) -> MappedArgs[FrameType]:
+       names.append(self.varargs_name)
+     if self.kwargs_name:
+       names.append(self.kwargs_name)
+-    argdict = {name: self._ctx.singles.Any.to_variable() for name in names}
++    argdict = {}
++    for name in names:
++      typ = self.annotations.get(name, self._ctx.consts.Any)
++      argdict[name] = typ.instantiate().to_variable()
+     return MappedArgs(signature=self, argdict=argdict)
+ 
+ 
+@@ -292,12 +301,19 @@ def __init__(
+     self.module = module
+ 
+   def __repr__(self):
+-    return f'SimpleFunction({self._name})'
++    return f'SimpleFunction({self.full_name})'
+ 
+   @property
+   def name(self):
+     return self._name
+ 
++  @property
++  def full_name(self):
++    if self.module:
++      return f'{self.module}.{self._name}'
++    else:
++      return self._name
++
+   @property
+   def signatures(self):
+     return self._signatures
+@@ -328,9 +344,12 @@ def call_with_mapped_args(
+   def call(self, args: Args[FrameType]) -> _HasReturnT:
+     return self.call_with_mapped_args(self.map_args(args))
+ 
++  def analyze_signature(self, sig: Signature) -> _HasReturnT:
++    assert sig in self.signatures
++    return self.call_with_mapped_args(sig.make_fake_args())
++
+   def analyze(self) -> Sequence[_HasReturnT]:
+-    return [self.call_with_mapped_args(sig.make_fake_args())
+-            for sig in self.signatures]
++    return [self.analyze_signature(sig) for sig in self.signatures]
+ 
+ 
+ class InterpreterFunction(SimpleFunction[_FrameT]):
+@@ -354,6 +373,7 @@ def __init__(
+     # A function saves a pointer to the frame it's defined in so that it has all
+     # the context needed to call itself.
+     self._parent_frame = parent_frame
++    self._call_cache = {}
+ 
+   def __repr__(self):
+     return f'InterpreterFunction({self.name})'
+@@ -363,9 +383,22 @@ def _attrs(self):
+     return (self.name, self.code)
+ 
+   def call_with_mapped_args(self, mapped_args: MappedArgs[_FrameT]) -> _FrameT:
++    log.info('Calling function:\n  Sig:  %s\n  Args: %s',
++             mapped_args.signature, mapped_args.argdict)
+     parent_frame = mapped_args.frame or self._parent_frame
++    if parent_frame.final_locals is None:
++      k = None
++    else:
++      # If the parent frame has finished running, then the context of this call
++      # will not change, so we can cache the return value.
++      k = (parent_frame.name, immutabledict.immutabledict(mapped_args.argdict))
++      if k in self._call_cache:
++        log.info('Reusing cached return value of function %s', self.name)
++        return self._call_cache[k]
+     frame = parent_frame.make_child_frame(self, mapped_args.argdict)
+     frame.run()
++    if k:
++      self._call_cache[k] = frame
+     return frame
+ 
+   def bind_to(self, callself: base.BaseValue) -> 'BoundFunction[_FrameT]':
+@@ -376,7 +409,8 @@ class PytdFunction(SimpleFunction[SimpleReturn]):
+ 
+   def call_with_mapped_args(
+       self, mapped_args: MappedArgs[FrameType]) -> SimpleReturn:
+-    return SimpleReturn(self._ctx.singles.Any)
++    ret = mapped_args.signature.annotations['return'].instantiate()
++    return SimpleReturn(ret)
+ 
+ 
+ class BoundFunction(BaseFunction[_HasReturnT]):
+@@ -402,21 +436,20 @@ def name(self):
+ 
+   @property
+   def signatures(self):
+-    raise NotImplementedError('BoundFunction.signatures')
++    return self.underlying.signatures
++
++  def call(self, args: Args[FrameType]) -> _HasReturnT:
++    new_posargs = (self.callself.to_variable(),) + args.posargs
++    args = dataclasses.replace(args, posargs=new_posargs)
++    return self.underlying.call(args)
+ 
+-  def _bind_mapped_args(
+-      self, mapped_args: MappedArgs[_FrameT]) -> MappedArgs[_FrameT]:
++  def analyze_signature(self, sig: Signature) -> _HasReturnT:
++    assert sig in self.underlying.signatures
++    mapped_args = sig.make_fake_args()
+     argdict = dict(mapped_args.argdict)
+     argdict[mapped_args.signature.param_names[0]] = self.callself.to_variable()
+-    return MappedArgs(mapped_args.signature, argdict, mapped_args.frame)
+-
+-  def call(self, args: Args[FrameType]) -> _HasReturnT:
+-    mapped_args = self._bind_mapped_args(self.underlying.map_args(args))
+-    return self.underlying.call_with_mapped_args(mapped_args)
++    bound_args = dataclasses.replace(mapped_args, argdict=argdict)
++    return self.underlying.call_with_mapped_args(bound_args)
+ 
+   def analyze(self) -> Sequence[_HasReturnT]:
+-    return [
+-        self.underlying.call_with_mapped_args(
+-            self._bind_mapped_args(sig.make_fake_args()))
+-        for sig in self.underlying.signatures
+-    ]
++    return [self.analyze_signature(sig) for sig in self.underlying.signatures]
+diff --git a/pytype/rewrite/abstract/instances.py b/pytype/rewrite/abstract/instances.py
+index d839a0c59..49106b61c 100644
+--- a/pytype/rewrite/abstract/instances.py
++++ b/pytype/rewrite/abstract/instances.py
+@@ -2,10 +2,9 @@
+ 
+ import logging
+ 
+-from typing import Dict as _Dict, List as _List, Set as _Set
++from typing import Dict as _Dict, List as _List, Set as _Set, Tuple as _Tuple
+ 
+ from pytype.rewrite.abstract import base
+-from pytype.rewrite.abstract import classes
+ 
+ log = logging.getLogger(__name__)
+ 
+@@ -13,7 +12,7 @@
+ _Variable = base.AbstractVariableType
+ 
+ 
+-class List(classes.PythonConstant[_List[_Variable]]):
++class List(base.PythonConstant[_List[_Variable]]):
+   """Representation of a Python list."""
+ 
+   def __init__(self, ctx: base.ContextType, constant: _List[_Variable]):
+@@ -27,7 +26,7 @@ def append(self, val: _Variable):
+     self.constant.append(val)
+ 
+ 
+-class Dict(classes.PythonConstant[_Dict[_Variable, _Variable]]):
++class Dict(base.PythonConstant[_Dict[_Variable, _Variable]]):
+   """Representation of a Python dict."""
+ 
+   def __init__(
+@@ -43,7 +42,7 @@ def setitem(self, key, val):
+     self.constant[key] = val
+ 
+ 
+-class Set(classes.PythonConstant[_Set[_Variable]]):
++class Set(base.PythonConstant[_Set[_Variable]]):
+   """Representation of a Python set."""
+ 
+   def __init__(self, ctx: base.ContextType, constant: _Set[_Variable]):
+@@ -55,3 +54,14 @@ def __repr__(self):
+ 
+   def add(self, val: _Variable):
+     self.constant.add(val)
++
++
++class Tuple(base.PythonConstant[_Tuple[_Variable, ...]]):
++  """Representation of a Python tuple."""
++
++  def __init__(self, ctx: base.ContextType, constant: _Tuple[_Variable, ...]):
++    assert isinstance(constant, tuple), constant
++    super().__init__(ctx, constant)
++
++  def __repr__(self):
++    return f'Tuple({self.constant!r})'
+diff --git a/pytype/rewrite/abstract/utils.py b/pytype/rewrite/abstract/utils.py
+index d31342763..43430e745 100644
+--- a/pytype/rewrite/abstract/utils.py
++++ b/pytype/rewrite/abstract/utils.py
+@@ -3,7 +3,6 @@
+ from typing import Any, Sequence, Type, TypeVar, get_origin, overload
+ 
+ from pytype.rewrite.abstract import base
+-from pytype.rewrite.abstract import classes
+ 
+ _T = TypeVar('_T')
+ 
+@@ -19,7 +18,7 @@ def get_atomic_constant(var: base.AbstractVariableType, typ: None = ...) -> Any:
+ 
+ 
+ def get_atomic_constant(var, typ=None):
+-  value = var.get_atomic_value(classes.PythonConstant)
++  value = var.get_atomic_value(base.PythonConstant)
+   constant = value.constant
+   if typ and not isinstance(constant, (runtime_type := get_origin(typ) or typ)):
+     raise ValueError(
+@@ -35,4 +34,4 @@ def join_values(
+   elif values:
+     return values[0]
+   else:
+-    return ctx.singles.Any
++    return ctx.consts.Any
+diff --git a/pytype/rewrite/context.py b/pytype/rewrite/context.py
+index 057e1a211..45545650c 100644
+--- a/pytype/rewrite/context.py
++++ b/pytype/rewrite/context.py
+@@ -18,7 +18,6 @@
+ from pytype.rewrite import load_abstract
+ from pytype.rewrite import output
+ from pytype.rewrite import pretty_printer
+-from pytype.rewrite.abstract import abstract
+ 
+ 
+ class Context:
+@@ -30,11 +29,11 @@ class Context:
+   options: config.Options
+   pytd_loader: load_pytd.Loader
+ 
+-  singles: abstract.Singletons
+   errorlog: errors.VmErrorLog
+   abstract_converter: convert.AbstractConverter
+   abstract_loader: load_abstract.AbstractLoader
+   pytd_converter: output.PytdConverter
++  consts: load_abstract.Constants
+ 
+   def __init__(
+       self,
+@@ -44,8 +43,10 @@ def __init__(
+     self.options = options or config.Options.create()
+     self.pytd_loader = pytd_loader or load_pytd.create_loader(self.options)
+ 
+-    self.singles = abstract.Singletons(self)
+     self.errorlog = errors.VmErrorLog(pretty_printer.PrettyPrinter(self))
+     self.abstract_converter = convert.AbstractConverter(self)
+     self.abstract_loader = load_abstract.AbstractLoader(self, self.pytd_loader)
+     self.pytd_converter = output.PytdConverter(self)
++
++    # We access these all the time, so create a convenient alias.
++    self.consts = self.abstract_loader.consts
+diff --git a/pytype/rewrite/convert.py b/pytype/rewrite/convert.py
+index 9027d4b7a..52f2a5aa2 100644
+--- a/pytype/rewrite/convert.py
++++ b/pytype/rewrite/convert.py
+@@ -34,18 +34,15 @@ def pytd_class_to_value(self, cls: pytd.Class) -> abstract.SimpleClass:
+     # Cache the class early so that references to it in its members don't cause
+     # infinite recursion.
+     self._cache.classes[cls] = abstract_class
+-    # TODO(b/324464265): For now, don't convert the bodies of builtin classes
+-    # because they contain lots of stuff the converter doesn't yet support.
+-    if not cls.name.startswith('builtins.'):
+-      for method in cls.methods:
+-        abstract_class.members[method.name] = (
+-            self.pytd_function_to_value(method))
+-      for constant in cls.constants:
+-        constant_type = self.pytd_type_to_value(constant.type)
+-        abstract_class.members[constant.name] = constant_type.instantiate()
+-      for nested_class in cls.classes:
+-        abstract_class.members[nested_class.name] = (
+-            self.pytd_class_to_value(nested_class))
++    for method in cls.methods:
++      abstract_class.members[method.name] = (
++          self.pytd_function_to_value(method))
++    for constant in cls.constants:
++      constant_type = self.pytd_type_to_value(constant.type)
++      abstract_class.members[constant.name] = constant_type.instantiate()
++    for nested_class in cls.classes:
++      abstract_class.members[nested_class.name] = (
++          self.pytd_class_to_value(nested_class))
+     return abstract_class
+ 
+   def pytd_function_to_value(
+@@ -86,16 +83,26 @@ def _pytd_type_to_value(self, typ: pytd.Type) -> abstract.BaseValue:
+     if isinstance(typ, pytd.ClassType):
+       return self.pytd_class_to_value(typ.cls)
+     elif isinstance(typ, pytd.AnythingType):
+-      return self._ctx.singles.Any
++      return self._ctx.consts.singles['Any']
+     elif isinstance(typ, pytd.NothingType):
+-      return self._ctx.singles.Never
+-    elif isinstance(typ, (pytd.LateType,
+-                          pytd.Literal,
+-                          pytd.Annotated,
+-                          pytd.TypeParameter,
+-                          pytd.UnionType,
+-                          pytd.IntersectionType,
+-                          pytd.GenericType)):
++      return self._ctx.consts.singles['Never']
++    elif isinstance(typ, pytd.UnionType):
++      return abstract.Union(
++          self._ctx, tuple(self._pytd_type_to_value(t) for t in typ.type_list))
++    # TODO(b/324464265): Everything from this point onward is a dummy
++    # implementation that needs to be replaced by a real one.
++    elif isinstance(typ, pytd.GenericType):
++      return self._pytd_type_to_value(typ.base_type)
++    elif isinstance(typ, pytd.TypeParameter):
++      return self._ctx.consts.Any
++    elif isinstance(typ, pytd.Literal):
++      return self._ctx.abstract_loader.load_raw_type(type(typ.value))
++    elif isinstance(typ, pytd.Annotated):
++      # We discard the Annotated wrapper for now, but we will need to keep track
++      # of it because Annotated is a special form that can be used in generic
++      # type aliases.
++      return self._pytd_type_to_value(typ.base_type)
++    elif isinstance(typ, (pytd.LateType, pytd.IntersectionType)):
+       raise NotImplementedError(
+           f'Abstract conversion not yet implemented for {typ}')
+     else:
+diff --git a/pytype/rewrite/flow/variables.py b/pytype/rewrite/flow/variables.py
+index f054d5881..9bcfeac5e 100644
+--- a/pytype/rewrite/flow/variables.py
++++ b/pytype/rewrite/flow/variables.py
+@@ -31,8 +31,9 @@ class Variable(Generic[_T]):
+   name: Optional[str] = None
+ 
+   @classmethod
+-  def from_value(cls, value: _T2) -> 'Variable[_T2]':
+-    return cls((Binding(value),))
++  def from_value(
++      cls, value: _T2, *, name: Optional[str] = None) -> 'Variable[_T2]':
++    return cls(bindings=(Binding(value),), name=name)
+ 
+   @property
+   def values(self) -> Tuple[_T, ...]:
+diff --git a/pytype/rewrite/frame.py b/pytype/rewrite/frame.py
+index 0343e3c8b..e47aafd73 100644
+--- a/pytype/rewrite/frame.py
++++ b/pytype/rewrite/frame.py
+@@ -1,6 +1,5 @@
+ """A frame of an abstract VM for type analysis of python bytecode."""
+ 
+-import enum
+ import logging
+ from typing import Any, FrozenSet, List, Mapping, Optional, Sequence, Set, Type
+ 
+@@ -23,10 +22,8 @@
+ _VarMap = Mapping[str, _AbstractVariable]
+ _FrameFunction = abstract.InterpreterFunction['Frame']
+ 
+-
+-class _Scope(enum.Enum):
+-  ENCLOSING = enum.auto()
+-  GLOBAL = enum.auto()
++# This enum will be used frequently, so alias it
++_Flags = pyc_marshal.Flags
+ 
+ 
+ class _ShadowedNonlocals:
+@@ -42,21 +39,17 @@ def add_enclosing(self, name: str) -> None:
+   def add_global(self, name: str) -> None:
+     self._globals.add(name)
+ 
+-  def has_scope(self, name: str, scope: _Scope) -> bool:
+-    if scope is _Scope.ENCLOSING:
+-      return name in self._enclosing
+-    elif scope is _Scope.GLOBAL:
+-      return name in self._globals
+-    else:
+-      raise ValueError(f'Unrecognized scope: {scope}')
++  def has_enclosing(self, name: str):
++    return name in self._enclosing
+ 
+-  def get_names(self, scope: _Scope) -> FrozenSet[str]:
+-    if scope is _Scope.ENCLOSING:
+-      return frozenset(self._enclosing)
+-    elif scope is _Scope.GLOBAL:
+-      return frozenset(self._globals)
+-    else:
+-      raise NotImplementedError(f'Unrecognized scope: {scope}')
++  def has_global(self, name: str):
++    return name in self._globals
++
++  def get_global_names(self) -> FrozenSet[str]:
++    return frozenset(self._globals)
++
++  def get_enclosing_names(self) -> FrozenSet[str]:
++    return frozenset(self._enclosing)
+ 
+ 
+ class Frame(frame_base.FrameBase[abstract.BaseValue]):
+@@ -102,6 +95,8 @@ def __init__(
+     self._classes: List[abstract.InterpreterClass] = []
+     # All variables returned via RETURN_VALUE
+     self._returns: List[_AbstractVariable] = []
++    # Function kwnames are stored in the vm by KW_NAMES and retrieved by CALL
++    self._kw_names = ()
+ 
+   def __repr__(self):
+     return f'Frame({self.name})'
+@@ -189,23 +184,41 @@ def store_deref(self, name: str, var: _AbstractVariable) -> None:
+     else:
+       self.store_local(name, var)
+ 
++  def _shadows_enclosing(self, name: str) -> bool:
++    """Does name shadow a variable from the enclosing scope?"""
++    return self._shadowed_nonlocals.has_enclosing(name)
++
++  def _shadows_global(self, name: str) -> bool:
++    """Does name shadow a variable from the global scope?"""
++    if self._is_module_frame:
++      # This is the global scope, and so `name` cannot shadow anything.
++      return False
++    return self._shadowed_nonlocals.has_global(name)
++
+   def load_local(self, name) -> _AbstractVariable:
+-    if (self._shadowed_nonlocals.has_scope(name, _Scope.ENCLOSING) or
+-        (not self._is_module_frame and
+-         self._shadowed_nonlocals.has_scope(name, _Scope.GLOBAL))):
++    if self._shadows_enclosing(name) or self._shadows_global(name):
+       raise KeyError(name)
+     return self._current_state.load_local(name)
+ 
+   def load_enclosing(self, name) -> _AbstractVariable:
+-    if self._shadowed_nonlocals.has_scope(name, _Scope.ENCLOSING):
++    if self._shadows_enclosing(name):
+       return self._current_state.load_local(name)
+     return self._initial_enclosing[name].with_name(name)
+ 
+   def load_global(self, name) -> _AbstractVariable:
+-    if (self._is_module_frame or
+-        self._shadowed_nonlocals.has_scope(name, _Scope.GLOBAL)):
++    if self._shadows_global(name):
+       return self._current_state.load_local(name)
+-    return self._initial_globals[name].with_name(name)
++    try:
++      if self._is_module_frame:
++        return self._current_state.load_local(name)
++      else:
++        return self._initial_globals[name].with_name(name)
++    except KeyError:
++      return self.load_builtin(name)
++
++  def load_builtin(self, name) -> _AbstractVariable:
++    builtin = self._ctx.abstract_loader.load_builtin_by_name(name)
++    return builtin.to_variable(name)
+ 
+   def load_deref(self, name) -> _AbstractVariable:
+     # When a name from a parent frame is referenced in a child frame, we make a
+@@ -231,7 +244,7 @@ def make_child_frame(
+     initial_enclosing = {}
+     for name in func.enclosing_scope:
+       if name in current_locals:
+-        assert not self._shadowed_nonlocals.has_scope(name, _Scope.GLOBAL)
++        assert not self._shadows_global(name)
+         initial_enclosing[name] = current_locals[name]
+       else:
+         initial_enclosing[name] = self._initial_enclosing[name]
+@@ -240,7 +253,7 @@ def make_child_frame(
+       initial_globals = current_locals
+     else:
+       initial_globals = dict(self._initial_globals)
+-      for name in self._shadowed_nonlocals.get_names(_Scope.GLOBAL):
++      for name in self._shadowed_nonlocals.get_global_names():
+         initial_globals[name] = current_locals[name]
+     return Frame(
+         ctx=self._ctx,
+@@ -286,10 +299,10 @@ def _merge_nonlocals_into(self, frame: Optional['Frame']) -> None:
+     if not frame:
+       return
+     # Store nonlocals.
+-    for name in self._shadowed_nonlocals.get_names(_Scope.ENCLOSING):
++    for name in self._shadowed_nonlocals.get_enclosing_names():
+       var = self._final_locals[name]
+       frame.store_deref(name, var)
+-    for name in self._shadowed_nonlocals.get_names(_Scope.GLOBAL):
++    for name in self._shadowed_nonlocals.get_global_names():
+       var = self._final_locals[name]
+       frame.store_global(name, var)
+ 
+@@ -305,7 +318,7 @@ def _call_function(
+                            abstract.BoundFunction)):
+         ret = func.call(args)
+         ret_values.append(ret.get_return_value())
+-      elif func is self._ctx.singles.__build_class__:
++      elif func is self._ctx.consts.singles['__build_class__']:
+         class_body, name = args.posargs
+         builder = class_body.get_atomic_value(_FrameFunction)
+         frame = builder.call(abstract.Args(frame=self))
+@@ -316,6 +329,7 @@ def _call_function(
+             functions=frame.functions,
+             classes=frame.classes,
+         )
++        log.info('Created class: %s', cls.name)
+         self._classes.append(cls)
+         ret_values.append(cls)
+       else:
+@@ -352,11 +366,29 @@ def _pop_jump_if_false(self, opcode):
+     nojump_state = self._current_state.with_condition(conditions.Condition())
+     self._merge_state_into(nojump_state, opcode.next.index)
+ 
++  # ---------------------------------------------------------------
++  # Opcodes with no typing effects
++
++  def byte_NOP(self, opcode):
++    del opcode  # unused
++
++  def byte_PRINT_EXPR(self, opcode):
++    del opcode  # unused
++    self._stack.pop_and_discard()
++
++  def byte_PRECALL(self, opcode):
++    # Internal cpython use
++    del opcode  # unused
++
+   def byte_RESUME(self, opcode):
++    # Internal cpython use
+     del opcode  # unused
+ 
++  # ---------------------------------------------------------------
++  # Load and store operations
++
+   def byte_LOAD_CONST(self, opcode):
+-    constant = abstract.PythonConstant(self._ctx, self._code.consts[opcode.arg])
++    constant = self._ctx.consts[self._code.consts[opcode.arg]]
+     self._stack.push(constant.to_variable())
+ 
+   def byte_RETURN_VALUE(self, opcode):
+@@ -382,26 +414,60 @@ def byte_STORE_ATTR(self, opcode):
+     full_name = f'{target.name}.{attr_name}'
+     self.store_local(full_name, attr)
+ 
++  def _unpack_function_annotations(self, packed_annot):
++    if self._code.python_version >= (3, 10):
++      # In Python 3.10+, packed_annot is a tuple of variables:
++      # (param_name1, param_type1, param_name2, param_type2, ...)
++      annot_seq = abstract.get_atomic_constant(packed_annot, tuple)
++      double_num_annots = len(annot_seq)
++      assert not double_num_annots % 2
++      annot = {}
++      for i in range(double_num_annots // 2):
++        name = abstract.get_atomic_constant(annot_seq[i*2], str)
++        annot[name] = annot_seq[i*2 + 1]
++    else:
++      # Pre-3.10, packed_annot was a name->param_type dictionary.
++      annot = abstract.get_atomic_constant(packed_annot, dict)
++    return annot
++
+   def byte_MAKE_FUNCTION(self, opcode):
+-    if opcode.arg not in (0, pyc_marshal.Flags.MAKE_FUNCTION_HAS_FREE_VARS):
+-      raise NotImplementedError('MAKE_FUNCTION not fully implemented')
++    # Aliases for readability
++    pop_const = lambda t: abstract.get_atomic_constant(self._stack.pop(), t)
++    arg = opcode.arg
++    # Get name and code object
+     if self._code.python_version >= (3, 11):
+-      code = abstract.get_atomic_constant(self._stack.pop(), blocks.OrderedCode)
++      code = pop_const(blocks.OrderedCode)
+       name = code.qualname
+     else:
+-      name = abstract.get_atomic_constant(self._stack.pop(), str)
+-      code = abstract.get_atomic_constant(self._stack.pop(), blocks.OrderedCode)
+-    if opcode.arg & pyc_marshal.Flags.MAKE_FUNCTION_HAS_FREE_VARS:
+-      freevars = abstract.get_atomic_constant(self._stack.pop())
++      name = pop_const(str)
++      code = pop_const(blocks.OrderedCode)
++    # Free vars
++    if arg & _Flags.MAKE_FUNCTION_HAS_FREE_VARS:
++      freevars = pop_const(tuple)
+       enclosing_scope = tuple(freevar.name for freevar in freevars)
+       assert all(enclosing_scope)
+     else:
+       enclosing_scope = ()
++    # Annotations
++    annot = {}
++    if arg & _Flags.MAKE_FUNCTION_HAS_ANNOTATIONS:
++      packed_annot = self._stack.pop()
++      annot = self._unpack_function_annotations(packed_annot)
++    # Defaults
++    pos_defaults, kw_defaults = (), {}
++    if arg & _Flags.MAKE_FUNCTION_HAS_POS_DEFAULTS:
++      pos_defaults = pop_const(tuple)
++    if arg & _Flags.MAKE_FUNCTION_HAS_KW_DEFAULTS:
++      packed_kw_def = self._stack.pop()
++      kw_defaults = packed_kw_def.get_atomic_value(abstract.ConstKeyDict)
++    # Make function
++    del annot, pos_defaults, kw_defaults  # TODO(b/241479600): Use these
+     func = abstract.InterpreterFunction(
+         self._ctx, name, code, enclosing_scope, self)
+-    if not (
+-        self._stack and
+-        self._stack.top().has_atomic_value(self._ctx.singles.__build_class__)):
++    log.info('Created function: %s', func.name)
++    if not (self._stack and
++            self._stack.top().has_atomic_value(
++                self._ctx.consts.singles['__build_class__'])):
+       # Class building makes and immediately calls a function that creates the
+       # class body; we don't need to store this function for later analysis.
+       self._functions.append(func)
+@@ -409,7 +475,7 @@ def byte_MAKE_FUNCTION(self, opcode):
+ 
+   def byte_PUSH_NULL(self, opcode):
+     del opcode  # unused
+-    self._stack.push(self._ctx.singles.NULL.to_variable())
++    self._stack.push(self._ctx.consts.singles['NULL'].to_variable())
+ 
+   def byte_LOAD_NAME(self, opcode):
+     name = opcode.argval
+@@ -435,7 +501,7 @@ def byte_LOAD_GLOBAL(self, opcode):
+     if self._code.python_version >= (3, 11) and opcode.arg & 1:
+       # Compiler-generated marker that will be consumed in byte_CALL
+       # We are loading a global and calling it as a function.
+-      self._stack.push(self._ctx.singles.NULL.to_variable())
++      self._stack.push(self._ctx.consts.singles['NULL'].to_variable())
+     name = opcode.argval
+     self._stack.push(self.load_global(name))
+ 
+@@ -451,30 +517,50 @@ def byte_LOAD_METHOD(self, opcode):
+     # this opcode should push two values onto the stack: either the unbound
+     # method and its `self` or NULL and the bound method. Since we always
+     # retrieve a bound method, we push the NULL
+-    self._stack.push(self._ctx.singles.NULL.to_variable())
++    self._stack.push(self._ctx.consts.singles['NULL'].to_variable())
+     self._stack.push(self._load_attr(instance_var, method_name))
+ 
+-  def byte_PRECALL(self, opcode):
+-    del opcode  # unused
++  # ---------------------------------------------------------------
++  # Function and method calls
++
++  def byte_KW_NAMES(self, opcode):
++    # Stores a list of kw names to be retrieved by CALL
++    self._kw_names = opcode.argval
++
++  def _make_function_args(self, args):
++    """Unpack args into posargs and kwargs (3.11+)."""
++    if self._kw_names:
++      n_kw = len(self._kw_names)
++      posargs = tuple(args[:-n_kw])
++      kw_vals = args[-n_kw:]
++      kwargs = immutabledict.immutabledict(zip(self._kw_names, kw_vals))
++    else:
++      posargs = tuple(args)
++      kwargs = _EMPTY_MAP
++    self._kw_names = ()
++    return abstract.Args(posargs=posargs, kwargs=kwargs, frame=self)
+ 
+   def byte_CALL(self, opcode):
+     sentinel, *rest = self._stack.popn(opcode.arg + 2)
+-    if not sentinel.has_atomic_value(self._ctx.singles.NULL):
++    if not sentinel.has_atomic_value(self._ctx.consts.singles['NULL']):
+       raise NotImplementedError('CALL not fully implemented')
+-    func_var, *args = rest
+-    self._call_function(func_var, abstract.Args(posargs=args, frame=self))
++    func, *args = rest
++    callargs = self._make_function_args(args)
++    self._call_function(func, callargs)
+ 
+   def byte_CALL_FUNCTION(self, opcode):
+     args = self._stack.popn(opcode.arg)
+-    func_var = self._stack.pop()
+-    self._call_function(func_var, abstract.Args(posargs=args, frame=self))
++    func = self._stack.pop()
++    callargs = abstract.Args(posargs=tuple(args), frame=self)
++    self._call_function(func, callargs)
+ 
+   def byte_CALL_METHOD(self, opcode):
+     args = self._stack.popn(opcode.arg)
+-    func_var = self._stack.pop()
++    func = self._stack.pop()
+     # pop the NULL off the stack (see LOAD_METHOD)
+     self._stack.pop_and_discard()
+-    self._call_function(func_var, abstract.Args(posargs=args, frame=self))
++    callargs = abstract.Args(posargs=tuple(args), frame=self)
++    self._call_function(func, callargs)
+ 
+   # Pytype tracks variables in enclosing scopes by name rather than emulating
+   # the runtime's approach with cells and freevars, so we can ignore the opcodes
+@@ -486,7 +572,7 @@ def byte_COPY_FREE_VARS(self, opcode):
+     del opcode  # unused
+ 
+   def byte_LOAD_BUILD_CLASS(self, opcode):
+-    self._stack.push(self._ctx.singles.__build_class__.to_variable())
++    self._stack.push(self._ctx.consts.singles['__build_class__'].to_variable())
+ 
+   # ---------------------------------------------------------------
+   # Build and extend collections
+@@ -503,7 +589,7 @@ def _build_collection_from_stack(
+     self._stack.push(constant.to_variable())
+ 
+   def byte_BUILD_TUPLE(self, opcode):
+-    self._build_collection_from_stack(opcode, tuple)
++    self._build_collection_from_stack(opcode, tuple, factory=abstract.Tuple)
+ 
+   def byte_BUILD_LIST(self, opcode):
+     self._build_collection_from_stack(opcode, list, factory=abstract.List)
+diff --git a/pytype/rewrite/load_abstract.py b/pytype/rewrite/load_abstract.py
+index 437513c0d..d1e978b70 100644
+--- a/pytype/rewrite/load_abstract.py
++++ b/pytype/rewrite/load_abstract.py
+@@ -1,12 +1,44 @@
+ """Loads abstract representations of imported objects."""
+ 
+-from typing import Any, Dict, Type
++from typing import Any as _Any, Dict, Type
+ 
+ from pytype import load_pytd
++from pytype.pytd import pytd
+ from pytype.rewrite.abstract import abstract
+ from pytype.rewrite.overlays import special_builtins
+ 
+ 
++class Constants:
++  """Store of constants and singletons.
++
++  Constants should be accessed via self[<raw value>], which creates the constant
++  if it does not exist. Under the hood, constants are stored in self._consts.
++
++  Singletons are stored in self.singles and should be accessed via
++  self.singles[<name>]. For convenience, the Any singleton can also be accessed
++  as self.Any.
++  """
++
++  _SINGLETONS = ('Any', '__build_class__', 'Never', 'NULL')
++
++  def __init__(self, ctx: abstract.ContextType):
++    self._ctx = ctx
++    self._consts: Dict[_Any, abstract.PythonConstant] = {}
++    self.singles: Dict[str, abstract.Singleton] = {}
++
++    for single in self._SINGLETONS:
++      self.singles[single] = abstract.Singleton(
++          ctx, single, allow_direct_instantiation=True)
++    # We use Any all the time, so alias it for convenience.
++    self.Any = self.singles['Any']  # pylint: disable=invalid-name
++
++  def __getitem__(self, const: _Any):
++    if const not in self._consts:
++      self._consts[const] = abstract.PythonConstant(
++          self._ctx, const, allow_direct_instantiation=True)
++    return self._consts[const]
++
++
+ class AbstractLoader:
+   """Abstract loader."""
+ 
+@@ -14,17 +46,45 @@ def __init__(self, ctx: abstract.ContextType, pytd_loader: load_pytd.Loader):
+     self._ctx = ctx
+     self._pytd_loader = pytd_loader
+ 
++    self.consts = Constants(ctx)
++    self._special_builtins = {
++        'assert_type': special_builtins.AssertType(self._ctx),
++    }
++    self._special_builtins['NoneType'] = self.consts[None]
++
++  def _load_pytd_node(self, pytd_node: pytd.Node) -> abstract.BaseValue:
++    if isinstance(pytd_node, pytd.Class):
++      return self._ctx.abstract_converter.pytd_class_to_value(pytd_node)
++    elif isinstance(pytd_node, pytd.Function):
++      return self._ctx.abstract_converter.pytd_function_to_value(pytd_node)
++    elif isinstance(pytd_node, pytd.Constant):
++      typ = self._ctx.abstract_converter.pytd_type_to_value(pytd_node.type)
++      return typ.instantiate()
++    else:
++      raise NotImplementedError(f'I do not know how to load {pytd_node}')
++
++  def load_builtin_by_name(self, name: str) -> abstract.BaseValue:
++    if name in self._special_builtins:
++      return self._special_builtins[name]
++    pytd_node = self._pytd_loader.lookup_pytd('builtins', name)
++    if isinstance(pytd_node, pytd.Constant):
++      # This usage of eval is safe, as we've already checked that this is the
++      # name of a builtin constant.
++      return self.consts[eval(name)]  # pylint: disable=eval-used
++    return self._load_pytd_node(pytd_node)
++
+   def get_module_globals(self) -> Dict[str, abstract.BaseValue]:
+-    """Gets a module's initial global namespace, including builtins."""
+-    # TODO(b/324464265): Populate from builtins.pytd.
++    """Gets a module's initial global namespace."""
+     return {
+-        '__name__': self._ctx.singles.Any,
+-        'assert_type': special_builtins.AssertType(self._ctx),
+-        'int': abstract.SimpleClass(
+-            self._ctx, name='int', module='builtins', members={}),
++        # TODO(b/324464265): Represent __builtins__ as a module.
++        '__builtins__': self.consts.Any,
++        '__name__': self.consts['__main__'],
++        '__file__': self.consts[self._ctx.options.input],
++        '__doc__': self.consts[None],
++        '__package__': self.consts[None],
+     }
+ 
+-  def raw_type_to_value(self, typ: Type[Any]) -> abstract.BaseValue:
++  def load_raw_type(self, typ: Type[_Any]) -> abstract.BaseValue:
+     """Converts a raw type to an abstract value.
+ 
+     Args:
+@@ -34,4 +94,7 @@ def raw_type_to_value(self, typ: Type[Any]) -> abstract.BaseValue:
+       The abstract representation of the type. For example, when passed `int`,
+       this function returns `abstract.SimpleClass(int)`.
+     """
+-    return abstract.SimpleClass(self._ctx, typ.__name__, {}, typ.__module__)
++    if typ is type(None):
++      return self.consts[None]
++    pytd_node = self._pytd_loader.lookup_pytd(typ.__module__, typ.__name__)
++    return self._load_pytd_node(pytd_node)
+diff --git a/pytype/rewrite/output.py b/pytype/rewrite/output.py
+index 81088f22e..60a10c5fa 100644
+--- a/pytype/rewrite/output.py
++++ b/pytype/rewrite/output.py
+@@ -1,5 +1,7 @@
+ """Abstract -> pytd converter."""
+ 
++from typing import Union
++
+ from pytype.pytd import pytd
+ from pytype.pytd import pytd_utils
+ from pytype.rewrite.abstract import abstract
+@@ -30,7 +32,7 @@ def to_pytd_def(self, val: abstract.BaseValue) -> pytd.Node:
+     """
+     if isinstance(val, abstract.SimpleClass):
+       return self._class_to_pytd_def(val)
+-    elif isinstance(val, abstract.InterpreterFunction):
++    elif isinstance(val, (abstract.SimpleFunction, abstract.BoundFunction)):
+       return self._function_to_pytd_def(val)
+     else:
+       raise NotImplementedError(
+@@ -41,9 +43,12 @@ def _class_to_pytd_def(self, val: abstract.SimpleClass) -> pytd.Class:
+     methods = []
+     constants = []
+     classes = []
++    instance = val.instantiate()
+     for member_name, member_val in val.members.items():
+       if member_name in _IGNORED_CLASS_ATTRIBUTES:
+         continue
++      if isinstance(member_val, abstract.SimpleFunction):
++        member_val = member_val.bind_to(instance)
+       try:
+         member_type = self.to_pytd_def(member_val)
+       except NotImplementedError:
+@@ -59,7 +64,6 @@ def _class_to_pytd_def(self, val: abstract.SimpleClass) -> pytd.Class:
+         )
+         constants.append(
+             pytd.Constant(name=member_name, type=class_member_type))
+-    instance = val.instantiate()
+     for member_name, member_val in instance.members.items():
+       member_type = self.to_pytd_type(member_val)
+       constants.append(pytd.Constant(name=member_name, type=member_type))
+@@ -75,9 +79,8 @@ def _class_to_pytd_def(self, val: abstract.SimpleClass) -> pytd.Class:
+         template=(),
+     )
+ 
+-  def _function_to_pytd_def(
+-      self, val: abstract.InterpreterFunction) -> pytd.Function:
+-    """Converts an abstract function to a pytd.Function."""
++  def _signature_to_pytd(self, sig: abstract.Signature) -> pytd.Signature:
++    """Converts a signature to a pytd.Signature."""
+ 
+     def get_pytd(param_name):
+       if param_name in sig.annotations:
+@@ -85,59 +88,70 @@ def get_pytd(param_name):
+       else:
+         return pytd.AnythingType()
+ 
++    params = []
++    for i, param_name in enumerate(sig.param_names):
++      if i < sig.posonly_count:
++        param_kind = pytd.ParameterKind.POSONLY
++      else:
++        param_kind = pytd.ParameterKind.REGULAR
++      params.append((param_name, param_kind))
++    params.extend((param_name, pytd.ParameterKind.KWONLY)
++                  for param_name in sig.kwonly_params)
++    pytd_params = tuple(pytd.Parameter(
++        name=param_name,
++        type=get_pytd(param_name),
++        kind=param_kind,
++        optional=param_name in sig.defaults,
++        mutated_type=None,
++    ) for param_name, param_kind in params)
++    if sig.varargs_name:
++      starargs = pytd.Parameter(
++          name=sig.varargs_name,
++          type=get_pytd(sig.varargs_name),
++          kind=pytd.ParameterKind.REGULAR,
++          optional=True,
++          mutated_type=None,
++      )
++    else:
++      starargs = None
++    if sig.kwargs_name:
++      starstarargs = pytd.Parameter(
++          name=sig.kwargs_name,
++          type=get_pytd(sig.kwargs_name),
++          kind=pytd.ParameterKind.REGULAR,
++          optional=True,
++          mutated_type=None,
++      )
++    else:
++      starstarargs = None
++    if 'return' in sig.annotations:
++      ret_type = self.to_pytd_type_of_instance(sig.annotations['return'])
++    else:
++      ret_type = pytd.AnythingType()
++    return pytd.Signature(
++        params=pytd_params,
++        starargs=starargs,
++        starstarargs=starstarargs,
++        return_type=ret_type,
++        exceptions=(),
++        template=(),
++    )
++
++  def _function_to_pytd_def(
++      self,
++      val: Union[abstract.SimpleFunction, abstract.BoundFunction],
++  ) -> pytd.Function:
++    """Converts an abstract function to a pytd.Function."""
+     pytd_sigs = []
+     for sig in val.signatures:
+-      params = []
+-      for i, param_name in enumerate(sig.param_names):
+-        if i < sig.posonly_count:
+-          param_kind = pytd.ParameterKind.POSONLY
+-        else:
+-          param_kind = pytd.ParameterKind.REGULAR
+-        params.append((param_name, param_kind))
+-      params.extend((param_name, pytd.ParameterKind.KWONLY)
+-                    for param_name in sig.kwonly_params)
+-      pytd_params = tuple(pytd.Parameter(
+-          name=param_name,
+-          type=get_pytd(param_name),
+-          kind=param_kind,
+-          optional=param_name in sig.defaults,
+-          mutated_type=None,
+-      ) for param_name, param_kind in params)
+-      if sig.varargs_name:
+-        starargs = pytd.Parameter(
+-            name=sig.varargs_name,
+-            type=get_pytd(sig.varargs_name),
+-            kind=pytd.ParameterKind.REGULAR,
+-            optional=True,
+-            mutated_type=None,
+-        )
+-      else:
+-        starargs = None
+-      if sig.kwargs_name:
+-        starstarargs = pytd.Parameter(
+-            name=sig.kwargs_name,
+-            type=get_pytd(sig.kwargs_name),
+-            kind=pytd.ParameterKind.REGULAR,
+-            optional=True,
+-            mutated_type=None,
+-        )
+-      else:
+-        starstarargs = None
+-      if 'return' in sig.annotations:
+-        ret_type = self.to_pytd_type_of_instance(sig.annotations['return'])
+-      else:
+-        func_frame = val.call_with_mapped_args(sig.make_fake_args())
+-        ret_type = self.to_pytd_type(func_frame.get_return_value())
+-      pytd_sigs.append(pytd.Signature(
+-          params=pytd_params,
+-          starargs=starargs,
+-          starstarargs=starstarargs,
+-          return_type=ret_type,
+-          exceptions=(),
+-          template=(),
+-      ))
++      pytd_sig = self._signature_to_pytd(sig)
++      if 'return' not in sig.annotations:
++        ret = val.analyze_signature(sig)
++        ret_type = self.to_pytd_type(ret.get_return_value())
++        pytd_sig = pytd_sig.Replace(return_type=ret_type)
++      pytd_sigs.append(pytd_sig)
+     return pytd.Function(
+-        name=val.code.name,
++        name=val.name.rsplit('.', 1)[-1],
+         signatures=tuple(pytd_sigs),
+         kind=pytd.MethodKind.METHOD,
+     )
+@@ -153,7 +167,7 @@ def to_pytd_type(self, val: abstract.BaseValue) -> pytd.Type:
+     Args:
+       val: The abstract value.
+     """
+-    if val is self._ctx.singles.Any:
++    if val is self._ctx.consts.Any:
+       return pytd.AnythingType()
+     elif isinstance(val, abstract.Union):
+       return pytd_utils.JoinTypes(self.to_pytd_type(v) for v in val.options)
+@@ -205,8 +219,10 @@ def to_pytd_type_of_instance(self, val: abstract.BaseValue) -> pytd.Type:
+     Args:
+       val: The abstract value.
+     """
+-    if val is self._ctx.singles.Any:
++    if val is self._ctx.consts.Any:
+       return pytd.AnythingType()
++    elif val is self._ctx.consts[None]:
++      return pytd.NamedType('builtins.NoneType')
+     elif isinstance(val, abstract.Union):
+       return pytd_utils.JoinTypes(self.to_pytd_type_of_instance(v)
+                                   for v in val.options)
+diff --git a/pytype/rewrite/overlays/special_builtins.py b/pytype/rewrite/overlays/special_builtins.py
+index 9780fa984..25cd48c8c 100644
+--- a/pytype/rewrite/overlays/special_builtins.py
++++ b/pytype/rewrite/overlays/special_builtins.py
+@@ -26,4 +26,4 @@ def call_with_mapped_args(
+     if actual != expected:
+       stack = frame.stack if (frame := mapped_args.frame) else None
+       self._ctx.errorlog.assert_type(stack, actual, expected)
+-    return abstract.SimpleReturn(abstract.PythonConstant(self._ctx, None))
++    return abstract.SimpleReturn(self._ctx.consts[None])
+diff --git a/pytype/rewrite/vm.py b/pytype/rewrite/vm.py
+index 7281aab70..dd483a364 100644
+--- a/pytype/rewrite/vm.py
++++ b/pytype/rewrite/vm.py
+@@ -1,5 +1,6 @@
+ """An abstract virtual machine for type analysis of python bytecode."""
+ 
++import logging
+ from typing import Dict, Optional, Sequence
+ 
+ from pytype import config
+@@ -11,6 +12,8 @@
+ from pytype.rewrite import frame as frame_lib
+ from pytype.rewrite.abstract import abstract
+ 
++log = logging.getLogger(__name__)
++
+ 
+ class VirtualMachine:
+   """Virtual machine."""
+@@ -45,25 +48,33 @@ def _run_module(self) -> None:
+ 
+   def analyze_all_defs(self) -> None:
+     """Analyzes all class and function definitions."""
++    log.info('Running module-level code')
+     self._run_module()
+     parent_frames = [self._module_frame]
+     while parent_frames:
+       parent_frame = parent_frames.pop(0)
+       for f in parent_frame.functions:
++        log.info('Analyzing %s', f.full_name)
+         parent_frames.extend(f.analyze())
+       classes = _collect_classes(parent_frame)
+       for cls in classes:
+         instance = cls.instantiate()
++        skip = cls.setup_methods + [cls.constructor] + cls.initializers
+         for f in cls.functions:
+-          parent_frames.extend(f.bind_to(instance).analyze())
++          if f.name.rsplit('.')[-1] in skip:
++            continue
++          method = f.bind_to(instance)
++          log.info('Analyzing %s', method.full_name)
++          parent_frames.extend(method.analyze())
+ 
+   def infer_stub(self) -> pytd.TypeDeclUnit:
+     """Infers a type stub."""
+     self._run_module()
+     pytd_nodes = []
+     for name, value in self._module_frame.final_locals.items():
+-      if name in self._initial_globals and value == self._initial_globals[name]:
++      if name in self._initial_globals:
+         continue
++      log.info("Inferring type of '%s: %s'", name, value)
+       try:
+         pytd_node = value.to_pytd_def()
+       except NotImplementedError:
+diff --git a/pytype/stubs/builtins/builtins.pytd b/pytype/stubs/builtins/builtins.pytd
+index 0e4516a16..5c7cb687e 100644
+--- a/pytype/stubs/builtins/builtins.pytd
++++ b/pytype/stubs/builtins/builtins.pytd
+@@ -1053,9 +1053,9 @@ class type(Callable, Type[_T]):
+     def __new__(cls: Type[type], object: _T) -> Type[_T]: ...
+     # The return type in the below two definitions is used only when abstract.py
+     # isn't able to build a class from the arguments.
+-    def __new__(cls: Type[type], name: str, bases: tuple[type, ...], dict: Dict[str, Any]) -> type: ...
++    def __new__(cls: Type[type], name: str, bases: tuple[type, ...], dict: Dict[str, Any], **kwargs) -> type: ...
+     def __init__(self, object) -> None: ...
+-    def __init__(self, name, bases, dict) -> None: ...
++    def __init__(self, name, bases, dict,  **kwargs) -> None: ...
+     def __subclasses__(self) -> List[type]: ...
+     def __instancecheck__(self, object) -> bool: ...
+     def __subclasscheck__(self, cls) -> bool: ...
+diff --git a/pytype/tools/analyze_project/pytype_runner.py b/pytype/tools/analyze_project/pytype_runner.py
+index d9bcb519a..52a628f5b 100644
+--- a/pytype/tools/analyze_project/pytype_runner.py
++++ b/pytype/tools/analyze_project/pytype_runner.py
+@@ -160,6 +160,7 @@ def escape_ninja_path(path: str):
+   """
+   return re.sub(r'(?P<char>[\n :$])', r'$\g<char>', path)
+ 
++
+ def get_imports_map(deps, module_to_imports_map, module_to_output):
+   """Get a short path -> full path map for the given deps."""
+   imports_map = {}

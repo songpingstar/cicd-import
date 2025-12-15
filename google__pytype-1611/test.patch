@@ -1,0 +1,1381 @@
+diff --git a/pytype/rewrite/abstract/base_test.py b/pytype/rewrite/abstract/base_test.py
+index 02a4b4f4a..9732f584e 100644
+--- a/pytype/rewrite/abstract/base_test.py
++++ b/pytype/rewrite/abstract/base_test.py
+@@ -7,58 +7,91 @@
+ import unittest
+ 
+ 
+-class BaseValueTest(test_utils.ContextfulTestBase):
++class FakeValue(base.BaseValue):
++
++  def __repr__(self):
++    return 'FakeValue'
++
++  @property
++  def _attrs(self):
++    return (id(self),)
++
++
++class TestBase(test_utils.ContextfulTestBase):
++
++  def _const(self, const):
++    return base.PythonConstant(self.ctx, const, allow_direct_instantiation=True)
++
++
++class BaseValueTest(TestBase):
+ 
+   def test_to_variable(self):
++    v = FakeValue(self.ctx)
++    var = v.to_variable()
++    assert_type(var, variables.Variable[FakeValue])
++    self.assertEqual(var.get_atomic_value(), v)
++    self.assertIsNone(var.name)
++
++  def test_name(self):
++    var = FakeValue(self.ctx).to_variable('NamedVariable')
++    self.assertEqual(var.name, 'NamedVariable')
++
++
++class PythonConstantTest(TestBase):
++
++  def test_equal(self):
++    c1 = self._const('a')
++    c2 = self._const('a')
++    self.assertEqual(c1, c2)
+ 
+-    class C(base.BaseValue):
++  def test_not_equal(self):
++    c1 = self._const('a')
++    c2 = self._const('b')
++    self.assertNotEqual(c1, c2)
+ 
+-      def __repr__(self):
+-        return 'C'
++  def test_constant_type(self):
++    c = self._const('a')
++    assert_type(c.constant, str)
+ 
+-      @property
+-      def _attrs(self):
+-        return (id(self),)
++  def test_get_type_from_variable(self):
++    var = self._const(True).to_variable()
++    const = var.get_atomic_value(base.PythonConstant[int]).constant
++    assert_type(const, int)
+ 
+-    c = C(self.ctx)
+-    var = c.to_variable()
+-    assert_type(var, variables.Variable[C])
+-    self.assertEqual(var.get_atomic_value(), c)
++  def test_direct_instantiation(self):
++    with self.assertRaises(ValueError):
++      base.PythonConstant(self.ctx, None)
+ 
+ 
+-class SingletonTest(test_utils.ContextfulTestBase):
++class SingletonTest(TestBase):
+ 
+-  def test_duplicate(self):
+-    s1 = base.Singleton(self.ctx, 'TEST_SINGLETON')
+-    s2 = base.Singleton(self.ctx, 'TEST_SINGLETON')
+-    self.assertIs(s1, s2)
++  def test_direct_instantiation(self):
++    with self.assertRaises(ValueError):
++      base.Singleton(self.ctx, 'TEST_SINGLETON')
+ 
+ 
+-class UnionTest(test_utils.ContextfulTestBase):
++class UnionTest(TestBase):
+ 
+   def test_basic(self):
+-    options = (classes.PythonConstant(self.ctx, True),
+-               classes.PythonConstant(self.ctx, False))
++    options = (self._const(True), self._const(False))
+     union = base.Union(self.ctx, options)
+     self.assertEqual(union.options, options)
+ 
+   def test_flatten(self):
+-    union1 = base.Union(self.ctx, (classes.PythonConstant(self.ctx, True),
+-                                   classes.PythonConstant(self.ctx, False)))
+-    union2 = base.Union(self.ctx, (union1, classes.PythonConstant(self.ctx, 5)))
+-    self.assertEqual(union2.options, (classes.PythonConstant(self.ctx, True),
+-                                      classes.PythonConstant(self.ctx, False),
+-                                      classes.PythonConstant(self.ctx, 5)))
++    union1 = base.Union(self.ctx, (self._const(True), self._const(False)))
++    union2 = base.Union(self.ctx, (union1, self._const(5)))
++    self.assertEqual(union2.options,
++                     (self._const(True), self._const(False), self._const(5)))
+ 
+   def test_deduplicate(self):
+-    true = classes.PythonConstant(self.ctx, True)
+-    false = classes.PythonConstant(self.ctx, False)
++    true = self._const(True)
++    false = self._const(False)
+     union = base.Union(self.ctx, (true, false, true))
+     self.assertEqual(union.options, (true, false))
+ 
+   def test_order(self):
+-    true = classes.PythonConstant(self.ctx, True)
+-    false = classes.PythonConstant(self.ctx, False)
++    true = self._const(True)
++    false = self._const(False)
+     self.assertEqual(base.Union(self.ctx, (true, false)),
+                      base.Union(self.ctx, (false, true)))
+ 
+diff --git a/pytype/rewrite/abstract/classes_test.py b/pytype/rewrite/abstract/classes_test.py
+index 09d7e51b2..d00cbc361 100644
+--- a/pytype/rewrite/abstract/classes_test.py
++++ b/pytype/rewrite/abstract/classes_test.py
+@@ -1,7 +1,6 @@
+ from pytype.rewrite.abstract import classes
+ from pytype.rewrite.abstract import functions
+ from pytype.rewrite.tests import test_utils
+-from typing_extensions import assert_type
+ 
+ import unittest
+ 
+@@ -9,7 +8,7 @@
+ class ClassTest(test_utils.ContextfulTestBase):
+ 
+   def test_get_attribute(self):
+-    x = classes.PythonConstant(self.ctx, 5)
++    x = self.ctx.consts[5]
+     cls = classes.SimpleClass(self.ctx, 'X', {'x': x})
+     self.assertEqual(cls.get_attribute('x'), x)
+ 
+@@ -28,49 +27,25 @@ def test_call(self):
+     self.assertEqual(instance.cls, cls)
+ 
+ 
+-class PythonConstantTest(test_utils.ContextfulTestBase):
+-
+-  def test_equal(self):
+-    c1 = classes.PythonConstant(self.ctx, 'a')
+-    c2 = classes.PythonConstant(self.ctx, 'a')
+-    self.assertEqual(c1, c2)
+-
+-  def test_not_equal(self):
+-    c1 = classes.PythonConstant(self.ctx, 'a')
+-    c2 = classes.PythonConstant(self.ctx, 'b')
+-    self.assertNotEqual(c1, c2)
+-
+-  def test_constant_type(self):
+-    c = classes.PythonConstant(self.ctx, 'a')
+-    assert_type(c.constant, str)
+-
+-  def test_get_type_from_variable(self):
+-    var = classes.PythonConstant(self.ctx, True).to_variable()
+-    const = var.get_atomic_value(classes.PythonConstant[int]).constant
+-    assert_type(const, int)
+-
+-
+ class MutableInstanceTest(test_utils.ContextfulTestBase):
+ 
+   def test_get_instance_attribute(self):
+     cls = classes.SimpleClass(self.ctx, 'X', {})
+     instance = classes.MutableInstance(self.ctx, cls)
+-    instance.members['x'] = classes.PythonConstant(self.ctx, 3)
+-    self.assertEqual(instance.get_attribute('x'),
+-                     classes.PythonConstant(self.ctx, 3))
++    instance.members['x'] = self.ctx.consts[3]
++    self.assertEqual(instance.get_attribute('x'), self.ctx.consts[3])
+ 
+   def test_get_class_attribute(self):
+     cls = classes.SimpleClass(
+-        self.ctx, 'X', {'x': classes.PythonConstant(self.ctx, 3)})
++        self.ctx, 'X', {'x': self.ctx.consts[3]})
+     instance = classes.MutableInstance(self.ctx, cls)
+-    self.assertEqual(instance.get_attribute('x'),
+-                     classes.PythonConstant(self.ctx, 3))
++    self.assertEqual(instance.get_attribute('x'), self.ctx.consts[3])
+ 
+   def test_set_attribute(self):
+     cls = classes.SimpleClass(self.ctx, 'X', {})
+     instance = classes.MutableInstance(self.ctx, cls)
+-    instance.set_attribute('x', classes.PythonConstant(self.ctx, 3))
+-    self.assertEqual(instance.members['x'], classes.PythonConstant(self.ctx, 3))
++    instance.set_attribute('x', self.ctx.consts[3])
++    self.assertEqual(instance.members['x'], self.ctx.consts[3])
+ 
+ 
+ class FrozenInstanceTest(test_utils.ContextfulTestBase):
+@@ -78,10 +53,9 @@ class FrozenInstanceTest(test_utils.ContextfulTestBase):
+   def test_get_attribute(self):
+     cls = classes.SimpleClass(self.ctx, 'X', {})
+     mutable_instance = classes.MutableInstance(self.ctx, cls)
+-    mutable_instance.set_attribute('x', classes.PythonConstant(self.ctx, 3))
++    mutable_instance.set_attribute('x', self.ctx.consts[3])
+     instance = mutable_instance.freeze()
+-    self.assertEqual(instance.get_attribute('x'),
+-                     classes.PythonConstant(self.ctx, 3))
++    self.assertEqual(instance.get_attribute('x'), self.ctx.consts[3])
+ 
+ 
+ if __name__ == '__main__':
+diff --git a/pytype/rewrite/abstract/functions_test.py b/pytype/rewrite/abstract/functions_test.py
+index b109eca83..87f745546 100644
+--- a/pytype/rewrite/abstract/functions_test.py
++++ b/pytype/rewrite/abstract/functions_test.py
+@@ -12,6 +12,7 @@ class FakeFrame:
+ 
+   def __init__(self, ctx):
+     self.ctx = ctx
++    self.name = ''
+     self.child_frames = []
+     self.final_locals = {}
+     self.stack = [self]
+@@ -24,7 +25,7 @@ def run(self):
+     pass
+ 
+   def get_return_value(self):
+-    return self.ctx.singles.Any
++    return self.ctx.consts.Any
+ 
+ 
+ def _get_const(src: str):
+@@ -49,15 +50,21 @@ def f(x, /, *args, y, **kwargs):
+ 
+   def test_map_args(self):
+     signature = functions.Signature(self.ctx, 'f', ('x', 'y'))
+-    x = classes.PythonConstant(self.ctx, 'x').to_variable()
+-    y = classes.PythonConstant(self.ctx, 'y').to_variable()
+-    args = signature.map_args(functions.Args([x, y]))
++    x = self.ctx.consts['x'].to_variable()
++    y = self.ctx.consts['y'].to_variable()
++    args = signature.map_args(functions.Args((x, y)))
+     self.assertEqual(args.argdict, {'x': x, 'y': y})
+ 
+   def test_fake_args(self):
+-    signature = functions.Signature(self.ctx, 'f', ('x', 'y'))
++    annotations = {'x': self.ctx.abstract_loader.load_raw_type(int)}
++    signature = functions.Signature(self.ctx, 'f', ('x', 'y'),
++                                    annotations=annotations)
+     args = signature.make_fake_args()
+     self.assertEqual(set(args.argdict), {'x', 'y'})
++    x = args.argdict['x'].get_atomic_value()
++    self.assertIsInstance(x, classes.FrozenInstance)
++    self.assertEqual(x.cls.name, 'int')
++    self.assertEqual(args.argdict['y'].get_atomic_value(), self.ctx.consts.Any)
+ 
+   def test_from_pytd_basic(self):
+     sig = self.from_pytd('def f(): ...')
+@@ -96,7 +103,7 @@ def test_map_args(self):
+     f = functions.InterpreterFunction(
+         ctx=self.ctx, name='f', code=func_code, enclosing_scope=(),
+         parent_frame=FakeFrame(self.ctx))
+-    x = classes.PythonConstant(self.ctx, 0).to_variable()
++    x = self.ctx.consts[0].to_variable()
+     mapped_args = f.map_args(functions.Args(posargs=(x,)))
+     self.assertEqual(mapped_args.signature, f.signatures[0])
+     self.assertEqual(mapped_args.argdict, {'x': x})
+@@ -105,7 +112,7 @@ def test_call_with_mapped_args(self):
+     f = functions.InterpreterFunction(
+         ctx=self.ctx, name='f', code=_get_const('def f(x): ...'),
+         enclosing_scope=(), parent_frame=FakeFrame(self.ctx))
+-    x = classes.PythonConstant(self.ctx, 0).to_variable()
++    x = self.ctx.consts[0].to_variable()
+     mapped_args = functions.MappedArgs(f.signatures[0], {'x': x})
+     frame = f.call_with_mapped_args(mapped_args)
+     assert_type(frame, FakeFrame)
+@@ -129,13 +136,25 @@ def test_analyze(self):
+     self.assertIsInstance(frames[0], FakeFrame)
+ 
+ 
++class PytdFunctionTest(test_utils.PytdTestBase,
++                       test_utils.ContextfulTestBase):
++
++  def test_return(self):
++    pytd_func = self.build_pytd('def f() -> int: ...')
++    func = self.ctx.abstract_converter.pytd_function_to_value(pytd_func)
++    args = functions.MappedArgs(signature=func.signatures[0], argdict={})
++    ret = func.call_with_mapped_args(args).get_return_value()
++    self.assertIsInstance(ret, classes.FrozenInstance)
++    self.assertEqual(ret.cls.name, 'int')
++
++
+ class BoundFunctionTest(test_utils.ContextfulTestBase):
+ 
+   def test_call(self):
+     f = functions.InterpreterFunction(
+         ctx=self.ctx, name='f', code=_get_const('def f(self): ...'),
+         enclosing_scope=(), parent_frame=FakeFrame(self.ctx))
+-    callself = classes.PythonConstant(self.ctx, 42)
++    callself = self.ctx.consts[42]
+     bound_f = f.bind_to(callself)
+     frame = bound_f.call(functions.Args())
+     assert_type(frame, FakeFrame)
+@@ -146,7 +165,7 @@ def test_analyze(self):
+     f = functions.InterpreterFunction(
+         ctx=self.ctx, name='f', code=_get_const('def f(self): ...'),
+         enclosing_scope=(), parent_frame=FakeFrame(self.ctx))
+-    callself = classes.PythonConstant(self.ctx, 42)
++    callself = self.ctx.consts[42]
+     bound_f = f.bind_to(callself)
+     frames = bound_f.analyze()
+     assert_type(frames, Sequence[FakeFrame])
+diff --git a/pytype/rewrite/abstract/instances_test.py b/pytype/rewrite/abstract/instances_test.py
+index 7fc8a4187..29c5bc046 100644
+--- a/pytype/rewrite/abstract/instances_test.py
++++ b/pytype/rewrite/abstract/instances_test.py
+@@ -1,7 +1,6 @@
+-from typing import Dict, List
++from typing import Dict, List, Set, Tuple
+ 
+ from pytype.rewrite.abstract import base
+-from pytype.rewrite.abstract import classes
+ from pytype.rewrite.abstract import instances
+ from pytype.rewrite.tests import test_utils
+ from typing_extensions import assert_type
+@@ -9,24 +8,48 @@
+ import unittest
+ 
+ # Type aliases
+-_Variable = base.AbstractVariableType
++_AbstractVariable = base.AbstractVariableType
+ 
+ 
+-class ListTest(test_utils.ContextfulTestBase):
++class BaseTest(test_utils.ContextfulTestBase):
++  """Base class for constant tests."""
++
++  def const_var(self, const, name=None):
++    return self.ctx.consts[const].to_variable(name)
++
++
++class ListTest(BaseTest):
+ 
+   def test_constant_type(self):
+-    a = classes.PythonConstant(self.ctx, "a").to_variable()
++    a = self.const_var("a")
+     c = instances.List(self.ctx, [a])
+-    assert_type(c.constant, List[_Variable])
++    assert_type(c.constant, List[_AbstractVariable])
+ 
+ 
+-class DictTest(test_utils.ContextfulTestBase):
++class DictTest(BaseTest):
+ 
+   def test_constant_type(self):
+-    a = classes.PythonConstant(self.ctx, "a").to_variable()
+-    b = classes.PythonConstant(self.ctx, "1").to_variable()
++    a = self.const_var("a")
++    b = self.const_var("b")
+     c = instances.Dict(self.ctx, {a: b})
+-    assert_type(c.constant, Dict[_Variable, _Variable])
++    assert_type(c.constant, Dict[_AbstractVariable, _AbstractVariable])
++
++
++class SetTest(BaseTest):
++
++  def test_constant_type(self):
++    a = self.const_var("a")
++    c = instances.Set(self.ctx, {a})
++    assert_type(c.constant, Set[_AbstractVariable])
++
++
++class TupleTest(BaseTest):
++
++  def test_constant_type(self):
++    a = self.const_var("a")
++    b = self.const_var("b")
++    c = instances.Tuple(self.ctx, (a, b))
++    assert_type(c.constant, Tuple[_AbstractVariable, ...])
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/pytype/rewrite/abstract/internal_test.py b/pytype/rewrite/abstract/internal_test.py
+index 5bd8e38dd..5e8748cb6 100644
+--- a/pytype/rewrite/abstract/internal_test.py
++++ b/pytype/rewrite/abstract/internal_test.py
+@@ -1,6 +1,5 @@
+ from typing import Any
+ 
+-from pytype.rewrite.abstract import classes
+ from pytype.rewrite.abstract import internal
+ from pytype.rewrite.tests import test_utils
+ 
+@@ -11,7 +10,7 @@ class ConstKeyDictTest(test_utils.ContextfulTestBase):
+ 
+   def test_asserts_dict(self):
+     _ = internal.ConstKeyDict(self.ctx, {
+-        'a': self.ctx.singles.Any.to_variable()
++        'a': self.ctx.consts.Any.to_variable()
+     })
+     with self.assertRaises(AssertionError):
+       x: Any = ['a', 'b']
+@@ -22,8 +21,7 @@ class SplatTest(test_utils.ContextfulTestBase):
+ 
+   def test_basic(self):
+     # Basic smoke test, remove when we have some real functionality to test.
+-    seq = [classes.PythonConstant(self.ctx, i).to_variable()
+-           for i in range(3)]
++    seq = [self.ctx.consts[i].to_variable() for i in range(3)]
+     x = internal.Splat(self.ctx, seq)
+     self.assertEqual(x.iterable, tuple(seq))
+ 
+diff --git a/pytype/rewrite/abstract/utils_test.py b/pytype/rewrite/abstract/utils_test.py
+index 545e63ebb..5ad9a9e86 100644
+--- a/pytype/rewrite/abstract/utils_test.py
++++ b/pytype/rewrite/abstract/utils_test.py
+@@ -1,7 +1,6 @@
+ from typing import Tuple
+ 
+ from pytype.rewrite.abstract import base
+-from pytype.rewrite.abstract import classes
+ from pytype.rewrite.abstract import utils
+ from pytype.rewrite.tests import test_utils
+ from typing_extensions import assert_type
+@@ -12,29 +11,29 @@
+ class GetAtomicConstantTest(test_utils.ContextfulTestBase):
+ 
+   def test_get(self):
+-    var = classes.PythonConstant(self.ctx, 'a').to_variable()
++    var = self.ctx.consts['a'].to_variable()
+     const = utils.get_atomic_constant(var)
+     self.assertEqual(const, 'a')
+ 
+   def test_get_with_type(self):
+-    var = classes.PythonConstant(self.ctx, 'a').to_variable()
++    var = self.ctx.consts['a'].to_variable()
+     const = utils.get_atomic_constant(var, str)
+     assert_type(const, str)
+     self.assertEqual(const, 'a')
+ 
+   def test_get_with_bad_type(self):
+-    var = classes.PythonConstant(self.ctx, 'a').to_variable()
++    var = self.ctx.consts['a'].to_variable()
+     with self.assertRaisesRegex(ValueError, 'expected int, got str'):
+       utils.get_atomic_constant(var, int)
+ 
+   def test_get_with_parameterized_type(self):
+-    var = classes.PythonConstant(self.ctx, ('a',)).to_variable()
++    var = self.ctx.consts[('a',)].to_variable()
+     const = utils.get_atomic_constant(var, Tuple[str, ...])
+     assert_type(const, Tuple[str, ...])
+     self.assertEqual(const, ('a',))
+ 
+   def test_get_with_bad_parameterized_type(self):
+-    var = classes.PythonConstant(self.ctx, 'a').to_variable()
++    var = self.ctx.consts['a'].to_variable()
+     with self.assertRaisesRegex(ValueError, 'expected tuple, got str'):
+       utils.get_atomic_constant(var, Tuple[str, ...])
+ 
+@@ -42,15 +41,15 @@ def test_get_with_bad_parameterized_type(self):
+ class JoinValuesTest(test_utils.ContextfulTestBase):
+ 
+   def test_empty(self):
+-    self.assertEqual(utils.join_values(self.ctx, []), self.ctx.singles.Any)
++    self.assertEqual(utils.join_values(self.ctx, []), self.ctx.consts.Any)
+ 
+   def test_one_value(self):
+-    a = classes.PythonConstant(self.ctx, 'a')
++    a = self.ctx.consts['a']
+     self.assertEqual(utils.join_values(self.ctx, [a]), a)
+ 
+   def test_multiple_values(self):
+-    a = classes.PythonConstant(self.ctx, 'a')
+-    b = classes.PythonConstant(self.ctx, 'b')
++    a = self.ctx.consts['a']
++    b = self.ctx.consts['b']
+     val = utils.join_values(self.ctx, [a, b])
+     self.assertEqual(val, base.Union(self.ctx, (a, b)))
+ 
+diff --git a/pytype/rewrite/convert_test.py b/pytype/rewrite/convert_test.py
+index c1f825049..efd9fbcc3 100644
+--- a/pytype/rewrite/convert_test.py
++++ b/pytype/rewrite/convert_test.py
+@@ -24,11 +24,11 @@ def test_class_type(self):
+ 
+   def test_anything_type(self):
+     abstract_value = self.conv.pytd_type_to_value(pytd.AnythingType())
+-    self.assertEqual(abstract_value, self.ctx.singles.Any)
++    self.assertEqual(abstract_value, self.ctx.consts.singles['Any'])
+ 
+   def test_nothing_type(self):
+     abstract_value = self.conv.pytd_type_to_value(pytd.NothingType())
+-    self.assertEqual(abstract_value, self.ctx.singles.Never)
++    self.assertEqual(abstract_value, self.ctx.consts.singles['Never'])
+ 
+ 
+ class PytdFunctionToValueTest(ConverterTestBase):
+diff --git a/pytype/rewrite/flow/variables_test.py b/pytype/rewrite/flow/variables_test.py
+index 0ad789d13..179fa6792 100644
+--- a/pytype/rewrite/flow/variables_test.py
++++ b/pytype/rewrite/flow/variables_test.py
+@@ -19,6 +19,11 @@ class VariableTest(unittest.TestCase):
+   def test_from_value(self):
+     var = variables.Variable.from_value(0)
+     assert_type(var, variables.Variable[int])
++    self.assertIsNone(var.name)
++
++  def test_from_value_with_name(self):
++    var = variables.Variable.from_value(0, name='Zero')
++    self.assertEqual(var.name, 'Zero')
+ 
+   def test_multiple_bindings(self):
+     var = variables.Variable((variables.Binding(0), variables.Binding('')))
+diff --git a/pytype/rewrite/frame_test.py b/pytype/rewrite/frame_test.py
+index 820b50270..b53ed9001 100644
+--- a/pytype/rewrite/frame_test.py
++++ b/pytype/rewrite/frame_test.py
+@@ -28,12 +28,35 @@ def _make_frame(self, src: str, name: str = '__main__') -> frame_lib.Frame:
+           name: value.to_variable() for name, value in module_globals.items()}
+     else:
+       initial_locals = initial_globals = {}
++    self._kw_names = ()
+     return frame_lib.Frame(self.ctx, name, code, initial_locals=initial_locals,
+                            initial_globals=initial_globals)
+ 
+   def _const_var(self, const, name=None):
+-    var = abstract.PythonConstant(self.ctx, const).to_variable()
+-    return var.with_name(name)
++    return self.ctx.consts[const].to_variable(name)
++
++  def assertConstantVar(self, var, expected):
++    val = var.get_atomic_value()
++    self.assertIsInstance(val, abstract.PythonConstant)
++    self.assertEqual(val.constant, expected)
++
++  def run_block(self, block: str, *, consts=()) -> frame_lib.Frame:
++    """Run a block of opcodes without checking frame exit conditions."""
++    code = test_utils.assemble_block(block, consts=consts)
++    blk = code.order[0].code
++    n = len(blk)
++    # Add a NOP at the end so there is always an opcode.next
++    blk.append(opcodes.NOP(n, blk[-1].line))
++    frame = frame_lib.Frame(self.ctx, 'test', code.Seal())
++    frame.stepn(n)
++    return frame
++
++  def run_frame_until(self, code: str, *, condition) -> frame_lib.Frame:
++    """Run a block of opcodes until condition is met."""
++    frame = self._make_frame(code)
++    while not condition(frame):
++      frame.step()
++    return frame
+ 
+ 
+ class ShadowedNonlocalsTest(unittest.TestCase):
+@@ -41,14 +64,14 @@ class ShadowedNonlocalsTest(unittest.TestCase):
+   def test_enclosing(self):
+     sn = frame_lib._ShadowedNonlocals()
+     sn.add_enclosing('x')
+-    self.assertTrue(sn.has_scope('x', frame_lib._Scope.ENCLOSING))
+-    self.assertCountEqual(sn.get_names(frame_lib._Scope.ENCLOSING), {'x'})
++    self.assertTrue(sn.has_enclosing('x'))
++    self.assertCountEqual(sn.get_enclosing_names(), {'x'})
+ 
+   def test_global(self):
+     sn = frame_lib._ShadowedNonlocals()
+     sn.add_global('x')
+-    self.assertTrue(sn.has_scope('x', frame_lib._Scope.GLOBAL))
+-    self.assertCountEqual(sn.get_names(frame_lib._Scope.GLOBAL), {'x'})
++    self.assertTrue(sn.has_global('x'))
++    self.assertCountEqual(sn.get_global_names(), {'x'})
+ 
+ 
+ class LoadStoreTest(FrameTestBase):
+@@ -56,7 +79,7 @@ class LoadStoreTest(FrameTestBase):
+   def test_store_local_in_module_frame(self):
+     frame = self._make_frame('', name='__main__')
+     frame.step()
+-    var = abstract.PythonConstant(self.ctx, 5).to_variable()
++    var = self._const_var(5)
+     frame.store_local('x', var)
+     stored = frame.load_local('x')
+     self.assertEqual(stored, var.with_name('x'))
+@@ -65,7 +88,7 @@ def test_store_local_in_module_frame(self):
+   def test_store_local_in_nonmodule_frame(self):
+     frame = self._make_frame('', name='f')
+     frame.step()
+-    var = abstract.PythonConstant(self.ctx, 5).to_variable()
++    var = self._const_var(5)
+     frame.store_local('x', var)
+     stored = frame.load_local('x')
+     self.assertEqual(stored, var.with_name('x'))
+@@ -75,7 +98,7 @@ def test_store_local_in_nonmodule_frame(self):
+   def test_store_global_in_module_frame(self):
+     frame = self._make_frame('', name='__main__')
+     frame.step()
+-    var = abstract.PythonConstant(self.ctx, 5).to_variable()
++    var = self._const_var(5)
+     frame.store_global('x', var)
+     stored = frame.load_global('x')
+     self.assertEqual(stored, var.with_name('x'))
+@@ -84,7 +107,7 @@ def test_store_global_in_module_frame(self):
+   def test_store_global_in_nonmodule_frame(self):
+     frame = self._make_frame('', name='f')
+     frame.step()
+-    var = abstract.PythonConstant(self.ctx, 5).to_variable()
++    var = self._const_var(5)
+     frame.store_global('x', var)
+     stored = frame.load_global('x')
+     self.assertEqual(stored, var.with_name('x'))
+@@ -93,7 +116,7 @@ def test_store_global_in_nonmodule_frame(self):
+ 
+   def test_overwrite_global_in_module_frame(self):
+     code = test_utils.parse('')
+-    var = abstract.PythonConstant(self.ctx, 5).to_variable()
++    var = self._const_var(5)
+     frame = frame_lib.Frame(
+         self.ctx, '__main__', code, initial_locals={'x': var},
+         initial_globals={'x': var})
+@@ -102,7 +125,7 @@ def test_overwrite_global_in_module_frame(self):
+     self.assertEqual(frame.load_global('x'), var.with_name('x'))
+     self.assertEqual(frame.load_local('x'), var.with_name('x'))
+ 
+-    var2 = abstract.PythonConstant(self.ctx, 10).to_variable()
++    var2 = self._const_var(10)
+     frame.store_global('x', var2)
+ 
+     self.assertEqual(frame.load_global('x'), var2.with_name('x'))
+@@ -110,7 +133,7 @@ def test_overwrite_global_in_module_frame(self):
+ 
+   def test_overwrite_global_in_nonmodule_frame(self):
+     code = test_utils.parse('')
+-    var = abstract.PythonConstant(self.ctx, 5).to_variable()
++    var = self._const_var(5)
+     frame = frame_lib.Frame(self.ctx, 'f', code, initial_globals={'x': var})
+     frame.step()
+ 
+@@ -118,7 +141,7 @@ def test_overwrite_global_in_nonmodule_frame(self):
+     with self.assertRaises(KeyError):
+       frame.load_local('x')
+ 
+-    var2 = abstract.PythonConstant(self.ctx, 10).to_variable()
++    var2 = self._const_var(10)
+     frame.store_global('x', var2)
+ 
+     self.assertEqual(frame.load_global('x'), var2.with_name('x'))
+@@ -129,7 +152,7 @@ def test_enclosing(self):
+     code = test_utils.parse('')
+     frame = frame_lib.Frame(self.ctx, 'f', code)
+     frame.step()
+-    x = abstract.PythonConstant(self.ctx, 5).to_variable()
++    x = self._const_var(5)
+     frame.store_enclosing('x', x)
+     with self.assertRaises(KeyError):
+       frame.load_local('x')
+@@ -157,14 +180,13 @@ def test_load_const(self):
+     frame.step()
+     self.assertEqual(len(frame._stack), 1)
+     constant = frame._stack.top().get_atomic_value()
+-    self.assertEqual(constant, abstract.PythonConstant(self.ctx, 42))
++    self.assertEqual(constant, self.ctx.consts[42])
+ 
+   def test_store_local(self):
+     frame = self._make_frame('x = 42')
+     frame.run()
+     self.assertIn('x', frame.final_locals)
+-    self.assertEqual(frame.final_locals['x'],
+-                     abstract.PythonConstant(self.ctx, 42))
++    self.assertEqual(frame.final_locals['x'], self.ctx.consts[42])
+ 
+   def test_store_global(self):
+     frame = self._make_frame("""
+@@ -173,8 +195,7 @@ def test_store_global(self):
+     """)
+     frame.run()
+     self.assertIn('x', frame.final_locals)
+-    self.assertEqual(frame.final_locals['x'],
+-                     abstract.PythonConstant(self.ctx, 42))
++    self.assertEqual(frame.final_locals['x'], self.ctx.consts[42])
+ 
+   def test_function(self):
+     frame = self._make_frame('def f(): pass')
+@@ -231,7 +252,7 @@ def g():
+     self.assertIn('g', f_frame.final_locals)
+     self.assertIn('x', f_frame.final_locals)
+     self.assertCountEqual(
+-        f_frame._shadowed_nonlocals.get_names(frame_lib._Scope.GLOBAL), {'x'})
++        f_frame._shadowed_nonlocals.get_global_names(), {'x'})
+ 
+   def test_read_enclosing(self):
+     module_frame = self._make_frame("""
+@@ -297,8 +318,7 @@ def __init__(self):
+     module_frame.run()
+     cls = _get(module_frame, 'C', abstract.InterpreterClass)
+     instance = cls.instantiate()
+-    self.assertEqual(instance.get_attribute('x'),
+-                     abstract.PythonConstant(self.ctx, 3))
++    self.assertEqual(instance.get_attribute('x'), self.ctx.consts[3])
+ 
+   def test_read_instance_attribute(self):
+     module_frame = self._make_frame("""
+@@ -314,8 +334,7 @@ def read(self):
+     read = cast(abstract.InterpreterFunction, cls.members['read'])
+     frame, = read.bind_to(instance).analyze()
+     self.assertIn('x', frame.final_locals)
+-    self.assertEqual(frame.final_locals['x'],
+-                     abstract.PythonConstant(self.ctx, 3))
++    self.assertEqual(frame.final_locals['x'], self.ctx.consts[3])
+ 
+   def test_write_and_read_instance_attribute(self):
+     module_frame = self._make_frame("""
+@@ -331,8 +350,7 @@ def write_and_read(self):
+                           cls.members['write_and_read'])
+     frame, = write_and_read.bind_to(instance).analyze()
+     self.assertIn('x', frame.final_locals)
+-    self.assertEqual(frame.final_locals['x'],
+-                     abstract.PythonConstant(self.ctx, 3))
++    self.assertEqual(frame.final_locals['x'], self.ctx.consts[3])
+ 
+   def test_modify_instance(self):
+     module_frame = self._make_frame("""
+@@ -344,7 +362,7 @@ def f(self):
+     """)
+     module_frame.run()
+     c = _get(module_frame, 'c', abstract.MutableInstance)
+-    self.assertEqual(c.get_attribute('x'), abstract.PythonConstant(self.ctx, 3))
++    self.assertEqual(c.get_attribute('x'), self.ctx.consts[3])
+ 
+   def test_overwrite_instance_attribute(self):
+     module_frame = self._make_frame("""
+@@ -359,8 +377,7 @@ def g(self):
+     """)
+     module_frame.run()
+     c = _get(module_frame, 'c', abstract.MutableInstance)
+-    self.assertEqual(c.get_attribute('x'),
+-                     abstract.PythonConstant(self.ctx, None))
++    self.assertEqual(c.get_attribute('x'), self.ctx.consts[None])
+ 
+   def test_instance_attribute_multiple_options(self):
+     module_frame = self._make_frame("""
+@@ -375,8 +392,19 @@ def __init__(self, rand):
+     instance = _get(module_frame, 'C', abstract.InterpreterClass).instantiate()
+     self.assertEqual(
+         instance.get_attribute('x'),
+-        abstract.Union(self.ctx, (abstract.PythonConstant(self.ctx, 3),
+-                                  abstract.PythonConstant(self.ctx, None))))
++        abstract.Union(self.ctx, (self.ctx.consts[3], self.ctx.consts[None])))
++
++  def test_method_parameter(self):
++    module_frame = self._make_frame("""
++      class C:
++        def f(self, x):
++          self.x = x
++      c = C()
++      c.f(0)
++    """)
++    module_frame.run()
++    instance = _get(module_frame, 'c', abstract.MutableInstance)
++    self.assertEqual(instance.get_attribute('x'), self.ctx.consts[0])
+ 
+   def test_multiple_initializers(self):
+     module_frame = self._make_frame("""
+@@ -394,8 +422,7 @@ def custom_init(self, rand):
+     instance = cls.instantiate()
+     self.assertEqual(
+         instance.get_attribute('x'),
+-        abstract.Union(self.ctx, (abstract.PythonConstant(self.ctx, 3),
+-                                  abstract.PythonConstant(self.ctx, None))))
++        abstract.Union(self.ctx, (self.ctx.consts[3], self.ctx.consts[None])))
+ 
+   def test_return(self):
+     module_frame = self._make_frame("""
+@@ -410,8 +437,7 @@ def f(rand):
+     f_frame, = f.analyze()
+     self.assertEqual(
+         f_frame.get_return_value(),
+-        abstract.Union(self.ctx, (abstract.PythonConstant(self.ctx, 3),
+-                                  abstract.PythonConstant(self.ctx, None))))
++        abstract.Union(self.ctx, (self.ctx.consts[3], self.ctx.consts[None])))
+ 
+   def test_stack(self):
+     module_frame = self._make_frame('def f(): pass')
+@@ -525,51 +551,90 @@ class ComprehensionAccumulatorTest(FrameTestBase):
+   """Test accumulating results in a comprehension."""
+ 
+   def test_list_append(self):
+-    block = [
+-        opcodes.BUILD_LIST(0, 0, 0, None),
+-        opcodes.LOAD_CONST(1, 0, 0, 1),
+-        opcodes.LOAD_CONST(2, 0, 1, 2),
+-        opcodes.LIST_APPEND(3, 0, 2, None),
+-        opcodes.NOP(4, 0)
+-    ]
+-    code = test_utils.FakeOrderedCode([block], [1, 2])
+-    frame = frame_lib.Frame(self.ctx, 'test', code.Seal())
+-    frame.stepn(4)
++    frame = self.run_block("""
++      BUILD_LIST 0
++      LOAD_CONST 0
++      LOAD_CONST 1
++      LIST_APPEND 2
++    """, consts=[1, 2])
+     target_var = frame._stack.peek(2)
+     target = abstract.get_atomic_constant(target_var)
+     self.assertEqual(target, [self._const_var(2)])
+ 
+   def test_set_add(self):
+-    block = [
+-        opcodes.BUILD_SET(0, 0, 0, None),
+-        opcodes.LOAD_CONST(1, 0, 0, 1),
+-        opcodes.LOAD_CONST(2, 0, 1, 2),
+-        opcodes.SET_ADD(3, 0, 2, None),
+-        opcodes.NOP(4, 0)
+-    ]
+-    code = test_utils.FakeOrderedCode([block], [1, 2])
+-    frame = frame_lib.Frame(self.ctx, 'test', code.Seal())
+-    frame.stepn(4)
++    frame = self.run_block("""
++      BUILD_SET 0
++      LOAD_CONST 0
++      LOAD_CONST 1
++      SET_ADD 2
++    """, consts=[1, 2])
+     target_var = frame._stack.peek(2)
+     target = abstract.get_atomic_constant(target_var)
+     self.assertEqual(target, {self._const_var(2)})
+ 
+   def test_map_add(self):
+-    block = [
+-        opcodes.BUILD_MAP(0, 0, 0, None),
+-        opcodes.LOAD_CONST(1, 0, 0, 1),
+-        opcodes.LOAD_CONST(2, 0, 1, 2),
+-        opcodes.LOAD_CONST(3, 0, 2, 3),
+-        opcodes.MAP_ADD(4, 0, 2, None),
+-        opcodes.NOP(5, 0)
+-    ]
+-    code = test_utils.FakeOrderedCode([block], [1, 2, 3])
+-    frame = frame_lib.Frame(self.ctx, 'test', code.Seal())
+-    frame.stepn(5)
++    frame = self.run_block("""
++      BUILD_MAP 0
++      LOAD_CONST 0
++      LOAD_CONST 1
++      LOAD_CONST 2
++      MAP_ADD 2
++    """, consts=[1, 2, 3])
+     target_var = frame._stack.peek(2)
+     target = abstract.get_atomic_constant(target_var)
+     self.assertEqual(target, {self._const_var(2): self._const_var(3)})
+ 
+ 
++class FunctionTest(FrameTestBase):
++  """Test making and calling functions."""
++
++  def _make_function(self, code, name):
++    module_frame = self._make_frame(code, name='__main__')
++    module_frame.run()
++    return _get(module_frame, name, _FrameFunction)
++
++  def _run_until_call(self, code):
++    def cond(frame):
++      return frame.current_opcode.name.startswith('CALL')
++    frame = self.run_frame_until(code, condition=cond)
++    return frame
++
++  @test_utils.skipBeforePy((3, 11), 'Relies on 3.11+ bytecode')
++  def test_make_function(self):
++    f = self._make_function("""
++      def f(x, /, y, z, *, a, b, c):
++        pass
++    """, 'f')
++    self.assertIsInstance(f, abstract.InterpreterFunction)
++    self.assertEqual(f.name, 'f')
++    sig = f.signatures[0]
++    self.assertEqual(repr(sig), 'def f(x, /, y, z, *, a, b, c) -> Any')
++
++  @test_utils.skipBeforePy((3, 11), 'Relies on 3.11+ bytecode')
++  def test_function_annotations(self):
++    f = self._make_function("""
++      def f(x: int, /, y: str, *, a: int, b: int = 1):
++        pass
++    """, 'f')
++    self.assertIsInstance(f, abstract.InterpreterFunction)
++    self.assertEqual(f.name, 'f')
++    sig = f.signatures[0]
++    self.assertEqual(repr(sig), 'def f(x, /, y, *, a, b) -> Any')
++
++  @test_utils.skipBeforePy((3, 11), 'Relies on 3.11+ bytecode')
++  def test_function_call_kwargs(self):
++    frame = self._run_until_call("""
++      def f(x, *, y):
++        pass
++      f(1, y=2)
++    """)
++    self.assertEqual(frame._kw_names, ('y',))
++    oparg = frame.current_opcode.arg  # pytype: disable=attribute-error
++    _, _, *args = frame._stack.popn(oparg + 2)
++    callargs = frame._make_function_args(args)
++    self.assertConstantVar(callargs.posargs[0], 1)
++    self.assertConstantVar(callargs.kwargs['y'], 2)
++
++
+ if __name__ == '__main__':
+   unittest.main()
+diff --git a/pytype/rewrite/load_abstract_test.py b/pytype/rewrite/load_abstract_test.py
+index 0ee493d85..bb91076f7 100644
+--- a/pytype/rewrite/load_abstract_test.py
++++ b/pytype/rewrite/load_abstract_test.py
+@@ -1,4 +1,8 @@
++import numbers
++
++from pytype.rewrite.abstract import abstract
+ from pytype.rewrite.tests import test_utils
++
+ import unittest
+ 
+ 
+@@ -10,5 +14,48 @@ def test_basic(self):
+     self.assertIn('__name__', module_globals)
+ 
+ 
++class LoadBuiltinByNameTest(test_utils.ContextfulTestBase):
++
++  def test_class(self):
++    int_cls = self.ctx.abstract_loader.load_builtin_by_name('int')
++    self.assertIsInstance(int_cls, abstract.SimpleClass)
++    self.assertEqual(int_cls.name, 'int')
++
++  def test_function(self):
++    abs_func = self.ctx.abstract_loader.load_builtin_by_name('abs')
++    self.assertIsInstance(abs_func, abstract.PytdFunction)
++    self.assertEqual(abs_func.name, 'abs')
++
++  def test_constant(self):
++    ellipsis = self.ctx.abstract_loader.load_builtin_by_name('Ellipsis')
++    self.assertIsInstance(ellipsis, abstract.PythonConstant)
++    self.assertEqual(ellipsis.constant, Ellipsis)
++
++  def test_none(self):
++    self.assertIs(self.ctx.abstract_loader.load_builtin_by_name('None'),
++                  self.ctx.consts[None])
++    self.assertIs(self.ctx.abstract_loader.load_builtin_by_name('NoneType'),
++                  self.ctx.consts[None])
++
++
++class LoadRawTypeTest(test_utils.ContextfulTestBase):
++
++  def test_builtin_type(self):
++    t = self.ctx.abstract_loader.load_raw_type(int)
++    self.assertIsInstance(t, abstract.SimpleClass)
++    self.assertEqual(t.name, 'int')
++    self.assertEqual(t.module, 'builtins')
++
++  def test_stdlib_type(self):
++    t = self.ctx.abstract_loader.load_raw_type(numbers.Number)
++    self.assertIsInstance(t, abstract.SimpleClass)
++    self.assertEqual(t.name, 'Number')
++    self.assertEqual(t.module, 'numbers')
++
++  def test_nonetype(self):
++    t = self.ctx.abstract_loader.load_raw_type(type(None))
++    self.assertIs(t, self.ctx.consts[None])
++
++
+ if __name__ == '__main__':
+   unittest.main()
+diff --git a/pytype/rewrite/output_test.py b/pytype/rewrite/output_test.py
+index 06a7eaf9d..8d4fe71a4 100644
+--- a/pytype/rewrite/output_test.py
++++ b/pytype/rewrite/output_test.py
+@@ -9,14 +9,13 @@
+ import unittest
+ 
+ 
+-def _make(src: str) -> abstract.BaseValue:
+-  vm = vm_lib.VirtualMachine.from_source(textwrap.dedent(src))
+-  vm._run_module()
+-  return list(vm._module_frame.final_locals.values())[-1]
+-
+-
+ class OutputTestBase(test_utils.ContextfulTestBase):
+ 
++  def make_value(self, src: str) -> abstract.BaseValue:
++    vm = vm_lib.VirtualMachine.from_source(textwrap.dedent(src), self.ctx)
++    vm._run_module()
++    return list(vm._module_frame.final_locals.values())[-1]
++
+   def assertPytdEqual(self, pytd_node, expected_str):
+     actual_str = pytd_utils.Print(pytd_node).strip()
+     expected_str = textwrap.dedent(expected_str).strip()
+@@ -26,7 +25,7 @@ def assertPytdEqual(self, pytd_node, expected_str):
+ class ClassToPytdDefTest(OutputTestBase):
+ 
+   def test_constant(self):
+-    cls = _make("""
++    cls = self.make_value("""
+       class C:
+         X = 0
+     """)
+@@ -37,7 +36,7 @@ class C:
+     """)
+ 
+   def test_method(self):
+-    cls = _make("""
++    cls = self.make_value("""
+       class C:
+         def f(self):
+           return 0
+@@ -49,7 +48,7 @@ def f(self) -> int: ...
+     """)
+ 
+   def test_nested_class(self):
+-    cls = _make("""
++    cls = self.make_value("""
+       class C:
+         class D:
+           pass
+@@ -61,7 +60,7 @@ class D: ...
+     """)
+ 
+   def test_instance_attribute(self):
+-    cls = _make("""
++    cls = self.make_value("""
+       class C:
+         def __init__(self):
+           self.x = 42
+@@ -77,7 +76,7 @@ def __init__(self) -> None: ...
+ class FunctionToPytdDefTest(OutputTestBase):
+ 
+   def test_basic(self):
+-    func = _make("""
++    func = self.make_value("""
+       def f(x, /, y, *args, z, **kwargs):
+         return 42
+     """)
+@@ -91,7 +90,7 @@ def f(x, /, y, *args, z, **kwargs) -> int: ...
+   # signature objects.
+   # pytype: disable=attribute-error
+   def test_param_annotation(self):
+-    func = _make("""
++    func = self.make_value("""
+       def f(x):
+         pass
+     """)
+@@ -101,7 +100,7 @@ def f(x):
+     self.assertPytdEqual(pytd_func, 'def f(x: C) -> None: ...')
+ 
+   def test_return_annotation(self):
+-    func = _make("""
++    func = self.make_value("""
+       def f():
+         pass
+     """)
+@@ -111,11 +110,11 @@ def f():
+     self.assertPytdEqual(pytd_func, 'def f() -> C: ...')
+ 
+   def test_default(self):
+-    func = _make("""
++    func = self.make_value("""
+       def f(x):
+         pass
+     """)
+-    func.signatures[0].defaults['x'] = abstract.PythonConstant(self.ctx, 0)
++    func.signatures[0].defaults['x'] = self.ctx.consts[0]
+     pytd_func = self.ctx.pytd_converter.to_pytd_def(func)
+     self.assertPytdEqual(pytd_func, 'def f(x = ...) -> None: ...')
+   # pytype: enable=attribute-error
+@@ -124,12 +123,11 @@ def f(x):
+ class ToPytdTypeTest(OutputTestBase):
+ 
+   def test_any(self):
+-    self.assertEqual(self.ctx.pytd_converter.to_pytd_type(self.ctx.singles.Any),
++    self.assertEqual(self.ctx.pytd_converter.to_pytd_type(self.ctx.consts.Any),
+                      pytd.AnythingType())
+ 
+   def test_constant(self):
+-    t = self.ctx.pytd_converter.to_pytd_type(
+-        abstract.PythonConstant(self.ctx, 0))
++    t = self.ctx.pytd_converter.to_pytd_type(self.ctx.consts[0])
+     self.assertPytdEqual(t, 'int')
+ 
+   def test_class(self):
+@@ -148,7 +146,7 @@ def test_frozen_instance(self):
+     self.assertPytdEqual(self.ctx.pytd_converter.to_pytd_type(instance), 'C')
+ 
+   def test_precise_callable(self):
+-    func = _make("""
++    func = self.make_value("""
+       def f(x):
+         pass
+     """)
+@@ -156,7 +154,7 @@ def f(x):
+                          'Callable[[Any], None]')
+ 
+   def test_any_args_callable(self):
+-    func = _make("""
++    func = self.make_value("""
+       def f(*args):
+         return 42
+     """)
+@@ -164,8 +162,8 @@ def f(*args):
+                          'Callable[..., int]')
+ 
+   def test_union(self):
+-    union = abstract.Union(self.ctx, (abstract.PythonConstant(self.ctx, 0),
+-                                      abstract.PythonConstant(self.ctx, None)))
++    union = abstract.Union(
++        self.ctx, (self.ctx.consts[0], self.ctx.consts[None]))
+     self.assertPytdEqual(self.ctx.pytd_converter.to_pytd_type(union),
+                          'Optional[int]')
+ 
+@@ -173,9 +171,8 @@ def test_union(self):
+ class ToPytdInstanceTypeTest(OutputTestBase):
+ 
+   def test_any(self):
+-    self.assertEqual(
+-        self.ctx.pytd_converter.to_pytd_type_of_instance(self.ctx.singles.Any),
+-        pytd.AnythingType())
++    t = self.ctx.pytd_converter.to_pytd_type_of_instance(self.ctx.consts.Any)
++    self.assertEqual(t, pytd.AnythingType())
+ 
+   def test_class(self):
+     cls = abstract.SimpleClass(self.ctx, 'C', {})
+diff --git a/pytype/rewrite/overlays/special_builtins_test.py b/pytype/rewrite/overlays/special_builtins_test.py
+index 12019f0fa..0c4228feb 100644
+--- a/pytype/rewrite/overlays/special_builtins_test.py
++++ b/pytype/rewrite/overlays/special_builtins_test.py
+@@ -10,11 +10,10 @@ class AssertTypeTest(unittest.TestCase):
+   def test_types_match(self):
+     ctx = context.Context()
+     assert_type_func = special_builtins.AssertType(ctx)
+-    var = abstract.PythonConstant(ctx, 0).to_variable()
++    var = ctx.consts[0].to_variable()
+     typ = abstract.SimpleClass(ctx, 'int', {}).to_variable()
+     ret = assert_type_func.call(abstract.Args(posargs=(var, typ)))
+-    self.assertEqual(ret.get_return_value(),
+-                     abstract.PythonConstant(ctx, None))
++    self.assertEqual(ret.get_return_value(), ctx.consts[None])
+ 
+ 
+ if __name__ == '__main__':
+diff --git a/pytype/rewrite/stack_test.py b/pytype/rewrite/stack_test.py
+index e103fced3..2b740ee4d 100644
+--- a/pytype/rewrite/stack_test.py
++++ b/pytype/rewrite/stack_test.py
+@@ -1,5 +1,4 @@
+ from pytype.rewrite import stack
+-from pytype.rewrite.abstract import abstract
+ from pytype.rewrite.tests import test_utils
+ 
+ import unittest
+@@ -8,7 +7,7 @@
+ class DataStackTest(test_utils.ContextfulTestBase):
+ 
+   def _var(self, val):
+-    return abstract.PythonConstant(self.ctx, val).to_variable()
++    return self.ctx.consts[val].to_variable()
+ 
+   def test_push(self):
+     s = stack.DataStack()
+@@ -19,7 +18,7 @@ def test_push(self):
+   def test_pop(self):
+     s = stack.DataStack()
+     var = self._var(5)
+-    var = abstract.PythonConstant(self.ctx, 5).to_variable()
++    var = self.ctx.consts[5].to_variable()
+     s.push(var)
+     popped = s.pop()
+     self.assertEqual(popped, var)
+diff --git a/pytype/rewrite/tests/CMakeLists.txt b/pytype/rewrite/tests/CMakeLists.txt
+index 59514c572..e8d4aad83 100644
+--- a/pytype/rewrite/tests/CMakeLists.txt
++++ b/pytype/rewrite/tests/CMakeLists.txt
+@@ -19,5 +19,16 @@ py_test(
+   SRCS
+     test_basic.py
+   DEPS
++    pytype.rewrite.tests.test_utils
+     pytype.tests.test_base
+ )
++
++py_test(
++  NAME
++    test_utils_test
++  SRCS
++    test_utils_test.py
++  DEPS
++    .test_utils
++    pytype.pyc.pyc
++)
+diff --git a/pytype/rewrite/tests/test_basic.py b/pytype/rewrite/tests/test_basic.py
+index 21e590668..f0dfbeebf 100644
+--- a/pytype/rewrite/tests/test_basic.py
++++ b/pytype/rewrite/tests/test_basic.py
+@@ -1,4 +1,5 @@
+ """Basic functional tests."""
++from pytype.rewrite.tests import test_utils
+ from pytype.tests import test_base
+ 
+ 
+@@ -31,6 +32,14 @@ def f(x):
+       f(0)
+     """)
+ 
++  @test_utils.skipBeforePy((3, 11), 'Relies on 3.11+ bytecode')
++  def test_function_kwargs(self):
++    self.Check("""
++      def f(x, *, y):
++        return x
++      f(0, y=1)
++    """)
++
+   def test_class(self):
+     self.Check("""
+       class C:
+@@ -66,6 +75,21 @@ def test_assert_type(self):
+     """)
+     self.assertErrorSequences(errors, {'e': ['Expected: str', 'Actual: int']})
+ 
++  def test_infer_class_body(self):
++    ty = self.Infer("""
++      class C:
++        def __init__(self):
++          self.x = 3
++        def f(self):
++          return self.x
++    """)
++    self.assertTypesMatchPytd(ty, """
++      class C:
++        x: int
++        def __init__(self) -> None: ...
++        def f(self) -> int: ...
++    """)
++
+ 
+ if __name__ == '__main__':
+   test_base.main()
+diff --git a/pytype/rewrite/tests/test_utils.py b/pytype/rewrite/tests/test_utils.py
+index ee68b133d..185b3d588 100644
+--- a/pytype/rewrite/tests/test_utils.py
++++ b/pytype/rewrite/tests/test_utils.py
+@@ -1,5 +1,6 @@
+ """Test utilities."""
+ 
++import re
+ import sys
+ import textwrap
+ from typing import Sequence
+@@ -45,6 +46,29 @@ def __init__(self, ops: Sequence[Sequence[opcodes.Opcode]], consts=()):
+     self.consts = consts
+ 
+ 
++# pylint: disable=invalid-name
++# Use camel-case to match the unittest.skip* methods.
++def skipIfPy(*versions, reason):
++  return unittest.skipIf(sys.version_info[:2] in versions, reason)
++
++
++def skipUnlessPy(*versions, reason):
++  return unittest.skipUnless(sys.version_info[:2] in versions, reason)
++
++
++def skipBeforePy(version, reason):
++  return unittest.skipIf(sys.version_info[:2] < version, reason)
++
++
++def skipFromPy(version, reason):
++  return unittest.skipUnless(sys.version_info[:2] < version, reason)
++
++
++def skipOnWin32(reason):
++  return unittest.skipIf(sys.platform == 'win32', reason)
++# pylint: enable=invalid-name
++
++
+ def parse(src: str) -> blocks.OrderedCode:
+   code = pyc.compile_src(
+       src=textwrap.dedent(src),
+@@ -55,3 +79,53 @@ def parse(src: str) -> blocks.OrderedCode:
+   )
+   ordered_code, unused_block_graph = blocks.process_code(code)
+   return ordered_code
++
++
++def assemble_block(bytecode: str, *, consts=()) -> FakeOrderedCode:
++  """Generate a block of opcodes for tests.
++
++  Args:
++    bytecode: A block of opcodes
++    consts: A sequence of constants (co_consts in the compiled code)
++
++  Returns:
++    A FakeOrderedCode
++
++  The bytecode is a block of text, one opcode per line, in the format
++    # line <lineno>
++    OP_WITH_ARG arg  # comment
++    OP  # comment
++    ...
++
++  Blank lines are ignored.
++
++  The line numbers are optional, all opcodes will get lineno=1 if omitted. If a
++  line number is supplied, all following opcodes get that line number until
++  another line number is encountered.
++  """
++
++  lines = textwrap.dedent(bytecode).split('\n')
++  ret = []
++  idx, lineno = 0, 1
++  for line in lines:
++    if m := re.match(r'# line (\d+)', line.strip()):
++      lineno = int(m.group(1))
++      continue
++    line = re.sub(r'#.*$', '', line)  # allow comments
++    parts = line.split()
++    if not parts:
++      continue
++    if len(parts) == 1:
++      op, = parts
++      arg = None
++    else:
++      op, arg, *extra = parts
++      assert not extra, extra
++      arg = int(arg)
++    op_cls = getattr(opcodes, op)
++    if arg is not None:
++      ret.append(op_cls(idx, lineno, arg, None))
++    else:
++      ret.append(op_cls(idx, lineno))
++    idx += 1
++  return FakeOrderedCode([ret], consts)
+diff --git a/pytype/rewrite/tests/test_utils_test.py b/pytype/rewrite/tests/test_utils_test.py
+new file mode 100644
+index 000000000..7d8f233a1
+--- /dev/null
++++ b/pytype/rewrite/tests/test_utils_test.py
+@@ -0,0 +1,39 @@
++"""Tests for test utilities."""
++
++from pytype.pyc import opcodes
++from pytype.rewrite.tests import test_utils
++
++import unittest
++
++
++class TestUtilsTest(unittest.TestCase):
++
++  def test_assemble_block(self):
++    block = """
++      # line 1
++      BUILD_SET 0
++      LOAD_CONST 0
++      # line 2
++      LOAD_CONST 1
++      SET_ADD 2
++      # line 3
++      RETURN_VALUE
++    """
++    expected = [
++        opcodes.BUILD_SET(0, 1, 0, None),
++        opcodes.LOAD_CONST(1, 1, 0, 1),
++        opcodes.LOAD_CONST(2, 2, 1, 2),
++        opcodes.SET_ADD(3, 2, 2, None),
++        opcodes.RETURN_VALUE(4, 3)
++    ]
++    actual = test_utils.assemble_block(block)
++    for a, e in zip(actual.order[0].code, expected):
++      self.assertEqual(a.__class__, e.__class__)
++      self.assertEqual(a.index, e.index)
++      self.assertEqual(a.line, e.line)
++      if isinstance(a, opcodes.OpcodeWithArg):
++        self.assertEqual(a.arg, e.arg)  # pytype: disable=attribute-error
++
++
++if __name__ == '__main__':
++  unittest.main()
