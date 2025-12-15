@@ -9,8 +9,8 @@ env:
   INSTANCE_DIR: google__pytype-213
   REPO_DIR: google/pytype
   base_commit: 580c2d8333f290ea6b173842cb958a52b5fb1e17
-  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
-  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
+  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
+  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: pytype/tools/analyze_project/pytype_runner_test.py
   CONDA_DIR: /opt/miniconda3
@@ -32,11 +32,11 @@ jobs:
         cat > setup_env.sh << EOF
         #!/bin/bash
         cd /testbed/$REPO_DIR
-        git submodule sync
-        git submodule update --init --recursive --checkout
+        apt-get install g++ cmake bison flex ninja-build
         pip install -q --upgrade pip setuptools
         pip install -e .
-        pip install -r requirements.txt
+        pip install -q importlab pyyaml six
+        #pip install -r requirements.txt
         #pip install -q -r test-requirements.txt
         pip install -q --upgrade pytest
         EOF
