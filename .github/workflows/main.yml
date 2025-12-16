@@ -3,12 +3,12 @@ name: pytest verification
 on:
   push:
     branches: [main]
-  workflow_dispatch:  # 允许手动触发并设置输入
-    inputs:
-      enable_post_process:
-        description: 'Enable post-process job?'
-        type: boolean
-        default: true
+  # workflow_dispatch:  # 允许手动触发并设置输入
+    # inputs:
+      # enable_post_process:
+        # description: 'Enable post-process job?'
+        # type: boolean
+        # default: false
     
 jobs:
   call-pytest-verification:
@@ -16,7 +16,7 @@ jobs:
     
   post-process:
     needs: call-pytest-verification
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.enable_post_process == 'true' }}
+    # if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.enable_post_process == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact from verification
