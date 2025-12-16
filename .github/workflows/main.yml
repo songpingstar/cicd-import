@@ -6,4 +6,4 @@ on:
     
 jobs:
   call-pytest-verification:
-    uses: ./.github/workflows/google__pytype-1353.yml@main
+    uses: ./.github/workflows/google__pytype-1353.yml
