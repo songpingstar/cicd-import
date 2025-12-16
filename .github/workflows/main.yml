@@ -15,7 +15,7 @@ env:
     
 jobs:
   call-pytest-verification:
-    uses: ./.github/workflows/${{ env.PYTEST_VERIFICATION_WORKFLOW }}.yml
+    uses: ./.github/workflows/google_pytype-1353.yml
     
   Docker-verification:
     needs: call-pytest-verification
