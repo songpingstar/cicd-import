@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     vim \
-    dos2unix \
+    dos2unix 
     # --- Python 基础 ---
     # python3 \
     # python3-pip \

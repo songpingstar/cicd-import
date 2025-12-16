@@ -3,7 +3,32 @@ name: pytest verification
 on:
   push:
     branches: [main]
+  workflow_dispatch:  # 允许手动触发并设置输入
+    inputs:
+      enable_post_process:
+        description: 'Enable post-process job?'
+        type: boolean
+        default: true
     
 jobs:
   call-pytest-verification:
-    uses: ./.github/workflows/google__pytype-1353.yml
+    uses: ./.github/workflows/actions/google__pytype-1353.yml
+    
+  post-process:
+    needs: call-pytest-verification
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.enable_post_process == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact from verification
+        uses: actions/download-artifact@v4
+        with:
+          name: google__pytype-1353  # 必须和 upload 时的 name 一致
+          path: ./downloaded-reports  # 下载到这个目录
+          
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Build Docker image
+        run: |
+          cd ./downloaded-reports
+          docker build -t my-app:latest .
