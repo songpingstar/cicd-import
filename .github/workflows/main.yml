@@ -43,6 +43,6 @@ jobs:
           # 运行容器，挂载目录，执行脚本，前台运行（自动退出）
           docker run --rm  \
           -v $GITHUB_WORKSPACE/downloaded-reports/test.patch:/testbed/test.patch \
-          -v $GITHUB_WORKSPACE/downloaded-reports/code.patch:/testbed/test.patch \
+          -v $GITHUB_WORKSPACE/downloaded-reports/code.patch:/testbed/code.patch \
           -v $GITHUB_WORKSPACE/downloaded-reports/run_verification.py:/testbed/run_verification.py \
           verification:latest bash -c "ls -la && python run_verification.py"
