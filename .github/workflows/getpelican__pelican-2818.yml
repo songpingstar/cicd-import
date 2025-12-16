@@ -36,7 +36,7 @@ jobs:
         conda activate base
         apt-get update -qq
         pip install -q --upgrade pip setuptools
-        pip install -q tox==2.5.0
+        python -m pip install -U pip tox
         pip install -e .
         #pip install -q -r requirements.txt
         #pip install -q -r test-requirements.txt
