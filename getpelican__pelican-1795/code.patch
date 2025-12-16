@@ -1,0 +1,16 @@
+diff --git a/pelican/contents.py b/pelican/contents.py
+index 0e91933bd..a6b8cc5f1 100644
+--- a/pelican/contents.py
++++ b/pelican/contents.py
+@@ -248,6 +248,11 @@ def replacer(m):
+                 origin = '/'.join((siteurl, Category(path, self.settings).url))
+             elif what == 'tag':
+                 origin = '/'.join((siteurl, Tag(path, self.settings).url))
++            else:
++                logger.warning(
++                        "Replacement Indicator '%s' not recognized, "
++                        "skipping replacement",
++                        what)
+ 
+             # keep all other parts, such as query, fragment, etc.
+             parts = list(value)

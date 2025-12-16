@@ -11,11 +11,11 @@ on:
         # default: false
         
 env:
-  PYTEST_VERIFICATION_WORKFLOW: google__pytype-1353
+  PYTEST_VERIFICATION_WORKFLOW: getpelican__pelican-1926
     
 jobs:
   call-pytest-verification:
-    uses: ./.github/workflows/google__pytype-1353.yml
+    uses: ./.github/workflows/getpelican__pelican-1926.yml
     
   Docker-verification:
     needs: call-pytest-verification
@@ -41,4 +41,8 @@ jobs:
           # 确保目录存在
           ls -la ./downloaded-reports  
           # 运行容器，挂载目录，执行脚本，前台运行（自动退出）
-          docker run --rm  -v $GITHUB_WORKSPACE/downloaded-reports:/testbed verification:latest bash -c "ls -la && python run_verification.py"
+          docker run --rm  \
+          -v $GITHUB_WORKSPACE/downloaded-reports/test.patch:/testbed/test.patch \
+          -v $GITHUB_WORKSPACE/downloaded-reports/code.patch:/testbed/test.patch \
+          -v $GITHUB_WORKSPACE/downloaded-reports/run_verification.py:/testbed/run_verification.py \
+          verification:latest bash -c "ls -la && python run_verification.py"

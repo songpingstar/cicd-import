@@ -1,0 +1,122 @@
+diff --git a/pelican/tests/test_contents.py b/pelican/tests/test_contents.py
+index 6f0f6dd93..2f774a6e0 100644
+--- a/pelican/tests/test_contents.py
++++ b/pelican/tests/test_contents.py
+@@ -11,7 +11,7 @@
+ 
+ import six
+ 
+-from pelican.contents import Article, Author, Category, Page, Static
++from pelican.contents import Article, Author, Category, Page, Static, Tag
+ from pelican.settings import DEFAULT_CONFIG
+ from pelican.signals import content_object_init
+ from pelican.tests.support import LoggedTestCase, get_settings, unittest
+@@ -457,6 +457,46 @@ def test_slugify_category_author(self):
+         self.assertEqual(
+             article.save_as, 'obrien/csharp-stuff/fnord/index.html')
+ 
++    def test_slugify_with_author_substitutions(self):
++        settings = get_settings()
++        settings['AUTHOR_SUBSTITUTIONS'] = [
++                                    ('Alexander Todorov', 'atodorov', False),
++                                    ('Krasimir Tsonev', 'krasimir', False),
++        ]
++        settings['ARTICLE_URL'] = 'blog/{author}/{slug}/'
++        settings['ARTICLE_SAVE_AS'] = 'blog/{author}/{slug}/index.html'
++        article_kwargs = self._copy_page_kwargs()
++        article_kwargs['metadata']['author'] = Author('Alexander Todorov',
++                                                      settings)
++        article_kwargs['metadata']['title'] = 'fnord'
++        article_kwargs['settings'] = settings
++        article = Article(**article_kwargs)
++        self.assertEqual(article.url, 'blog/atodorov/fnord/')
++        self.assertEqual(article.save_as, 'blog/atodorov/fnord/index.html')
++
++    def test_slugify_category_with_dots(self):
++        settings = get_settings()
++        settings['CATEGORY_SUBSTITUTIONS'] = [('Fedora QA', 'fedora.qa', True)]
++        settings['ARTICLE_URL'] = '{category}/{slug}/'
++        article_kwargs = self._copy_page_kwargs()
++        article_kwargs['metadata']['category'] = Category('Fedora QA',
++                                                          settings)
++        article_kwargs['metadata']['title'] = 'This Week in Fedora QA'
++        article_kwargs['settings'] = settings
++        article = Article(**article_kwargs)
++        self.assertEqual(article.url, 'fedora.qa/this-week-in-fedora-qa/')
++
++    def test_slugify_tags_with_dots(self):
++        settings = get_settings()
++        settings['TAG_SUBSTITUTIONS'] = [('Fedora QA', 'fedora.qa', True)]
++        settings['ARTICLE_URL'] = '{tag}/{slug}/'
++        article_kwargs = self._copy_page_kwargs()
++        article_kwargs['metadata']['tag'] = Tag('Fedora QA', settings)
++        article_kwargs['metadata']['title'] = 'This Week in Fedora QA'
++        article_kwargs['settings'] = settings
++        article = Article(**article_kwargs)
++        self.assertEqual(article.url, 'fedora.qa/this-week-in-fedora-qa/')
++
+ 
+ class TestStatic(LoggedTestCase):
+ 
+diff --git a/pelican/tests/test_urlwrappers.py b/pelican/tests/test_urlwrappers.py
+index f3dc81989..21a7d98f5 100644
+--- a/pelican/tests/test_urlwrappers.py
++++ b/pelican/tests/test_urlwrappers.py
+@@ -56,3 +56,34 @@ def test_equality(self):
+ 
+         cat_ascii = Category('指導書', settings={})
+         self.assertEqual(cat_ascii, u'zhi-dao-shu')
++
++    def test_slugify_with_substitutions_and_dots(self):
++        tag = Tag('Tag Dot',
++                  settings={
++                        'TAG_SUBSTITUTIONS': [('Tag Dot', 'tag.dot', True)]
++                    })
++        cat = Category('Category Dot',
++                       settings={
++                        'CATEGORY_SUBSTITUTIONS': (('Category Dot',
++                                                    'cat.dot',
++                                                    True),)
++                        })
++
++        self.assertEqual(tag.slug, 'tag.dot')
++        self.assertEqual(cat.slug, 'cat.dot')
++
++    def test_author_slug_substitutions(self):
++        settings = {
++            'AUTHOR_SUBSTITUTIONS': [
++                                    ('Alexander Todorov', 'atodorov', False),
++                                    ('Krasimir Tsonev', 'krasimir', False),
++            ]
++        }
++
++        author1 = Author('Mr. Senko', settings=settings)
++        author2 = Author('Alexander Todorov', settings=settings)
++        author3 = Author('Krasimir Tsonev', settings=settings)
++
++        self.assertEqual(author1.slug, 'mr-senko')
++        self.assertEqual(author2.slug, 'atodorov')
++        self.assertEqual(author3.slug, 'krasimir')
+diff --git a/pelican/tests/test_utils.py b/pelican/tests/test_utils.py
+index fed7e94b4..8dfc0b9bc 100644
+--- a/pelican/tests/test_utils.py
++++ b/pelican/tests/test_utils.py
+@@ -131,6 +131,18 @@ def test_slugify_substitute(self):
+         for value, expected in samples:
+             self.assertEqual(utils.slugify(value, subs), expected)
+ 
++    def test_slugify_substitute_and_keeping_non_alphanum(self):
++
++        samples = (('Fedora QA', 'fedora.qa'),
++                   ('C++ is used by Fedora QA', 'cpp is used by fedora.qa'),
++                   ('C++ is based on C', 'cpp-is-based-on-c'),
++                   ('C+++ test C+ test', 'cpp-test-c-test'),)
++
++        subs = (('Fedora QA', 'fedora.qa', True),
++                ('c++', 'cpp'),)
++        for value, expected in samples:
++            self.assertEqual(utils.slugify(value, subs), expected)
++
+     def test_get_relative_path(self):
+ 
+         samples = ((os.path.join('test', 'test.html'), os.pardir),
