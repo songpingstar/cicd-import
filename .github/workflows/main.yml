@@ -35,10 +35,8 @@ jobs:
           
       - name: Run script in container with mounted reports
         run: |
-        
-        ls -la ./downloaded-reports  # 确保目录存在
-
-        docker run --rm \          # 运行容器，挂载目录，执行脚本，前台运行（自动退出）
-          -v ${{ github.workspace }}/downloaded-reports:/testbed \
-          verification:latest \
-          sh -c "ls -la && python run_verification.py"
+          ls -la ./downloaded-reports  # 确保目录存在
+          docker run --rm \          # 运行容器，挂载目录，执行脚本，前台运行（自动退出）
+              -v ${{ github.workspace }}/downloaded-reports:/testbed \
+              verification:latest \
+              sh -c "ls -la && python run_verification.py"
