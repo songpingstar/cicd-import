@@ -9,10 +9,13 @@ on:
         # description: 'Enable post-process job?'
         # type: boolean
         # default: false
+        
+env:
+  PYTEST_VERIFICATION_WORKFLOW: google_pytype-1353
     
 jobs:
   call-pytest-verification:
-    uses: ./.github/workflows/google__pytype-1353.yml
+    uses: ./.github/workflows/${{ env.PYTEST_VERIFICATION_WORKFLOW }}.yml
     
   Docker-verification:
     needs: call-pytest-verification
@@ -22,7 +25,7 @@ jobs:
       - name: Download artifact from verification
         uses: actions/download-artifact@v4
         with:
-          name: google__pytype-1353  # 必须和 upload 时的 name 一致
+          name: ${{ env.PYTEST_VERIFICATION_WORKFLOW }}  # 必须和 upload 时的 name 一致
           path: ./downloaded-reports  # 下载到这个目录
           
       - name: Set up Docker Buildx
@@ -39,6 +42,6 @@ jobs:
           ls -la ./downloaded-reports  
           # 运行容器，挂载目录，执行脚本，前台运行（自动退出）
           docker run --rm \          
-              -v ${{ github.workspace }}/downloaded-reports:/testbed \
+              -v downloaded-reports:/testbed \
               verification:latest \
               bash -c "ls -la && python run_verification.py"
