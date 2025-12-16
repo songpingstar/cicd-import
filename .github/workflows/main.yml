@@ -12,7 +12,7 @@ on:
     
 jobs:
   call-pytest-verification:
-    uses: ./.github/workflows/actions/google__pytype-1353.yml
+    uses: ./.github/workflows/google__pytype-1353.yml
     
   post-process:
     needs: call-pytest-verification
