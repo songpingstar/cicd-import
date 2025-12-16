@@ -41,4 +41,4 @@ jobs:
           # 确保目录存在
           ls -la ./downloaded-reports  
           # 运行容器，挂载目录，执行脚本，前台运行（自动退出）
-          docker run --rm  -v downloaded-reports:/testbed verification:latest bash -c "ls -la && python run_verification.py"
+          docker run --rm  -v $GITHUB_WORKSPACE/downloaded-reports:/testbed verification:latest bash -c "ls -la && python run_verification.py"
