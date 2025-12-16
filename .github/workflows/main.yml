@@ -14,7 +14,7 @@ jobs:
   call-pytest-verification:
     uses: ./.github/workflows/google__pytype-1353.yml
     
-  post-process:
+  Docker-verification:
     needs: call-pytest-verification
     # if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.enable_post_process == 'true' }}
     runs-on: ubuntu-latest
@@ -35,8 +35,10 @@ jobs:
           
       - name: Run script in container with mounted reports
         run: |
-          ls -la ./downloaded-reports  # 确保目录存在
-          docker run --rm \          # 运行容器，挂载目录，执行脚本，前台运行（自动退出）
+          # 确保目录存在
+          ls -la ./downloaded-reports  
+          # 运行容器，挂载目录，执行脚本，前台运行（自动退出）
+          docker run --rm \          
               -v ${{ github.workspace }}/downloaded-reports:/testbed \
               verification:latest \
-              sh -c "ls -la && python run_verification.py"
+              bash -c "ls -la && python run_verification.py"
