@@ -11,11 +11,11 @@ on:
         # default: false
         
 env:
-  PYTEST_VERIFICATION_WORKFLOW: getpelican__pelican-1926
+  PYTEST_VERIFICATION_WORKFLOW: geldata__gel-8721
     
 jobs:
   call-pytest-verification:
-    uses: ./.github/workflows/getpelican__pelican-1926.yml
+    uses: ./.github/workflows/geldata__gel-8721.yml
     
   Docker-verification:
     needs: call-pytest-verification

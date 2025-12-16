@@ -5,14 +5,15 @@ on:
     inputs: {}   # 不需要输入参数，保持原有env变量
 
 env:
-  REPO_URL: https://github.com/getpelican/pelican.git
-  INSTANCE_DIR: getpelican__pelican-1795
-  REPO_DIR: pelican
-  base_commit: ed71ad0d3a54d825e73778b6964a2f47785d3740
+  REPO_URL: https://github.com/geldata/gel.git
+  INSTANCE_DIR: geldata__gel-8721
+  REPO_DIR: gel
+  base_commit: 4a5f17379884d7a54e6fee20c1d9af2839a8d8fa
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
-  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
+  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
-  TEST_FILE: pelican/tests/test_contents.py
+  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
+  TEST_FILE: tests/test_http_ext_auth.py
   CONDA_DIR: /opt/miniconda3
 
 jobs:
@@ -35,8 +36,8 @@ jobs:
         source /opt/miniconda3/etc/profile.d/conda.sh
         conda activate base
         pip install -q --upgrade pip setuptools
-        #pip install -e .
-        pip install -q -r requirements.txt
+        pip install -e .
+        #pip install -q -r requirements.txt
         #pip install -q -r test-requirements.txt
         #pip install -q --upgrade pytest
         pip install -v pytest==6.2.5
