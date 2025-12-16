@@ -31,4 +31,15 @@ jobs:
       - name: Build Docker image
         run: |
           cd ./downloaded-reports
-          docker build -t my-app:latest .
+          docker build -t verification:latest .
+          
+      - name: Run script in container with mounted reports
+        run: |
+        # 确保目录存在
+        ls -la ./downloaded-reports
+
+        # 运行容器，挂载目录，执行脚本，前台运行（自动退出）
+        docker run --rm \
+          -v ${{ github.workspace }}/downloaded-reports:/testbed \
+          verification:latest \
+          sh -c "ls -la && python run_verification.py"
