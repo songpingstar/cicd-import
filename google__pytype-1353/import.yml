@@ -1,8 +1,8 @@
 name: pytest verification
 
 on:
-  push:
-    branches: [main]
+  workflow_call:  # 添加这一行，使其可以被调用
+    inputs: {}   # 不需要输入参数，保持原有env变量
 
 env:
   REPO_URL: https://github.com/google/pytype.git
@@ -165,6 +165,8 @@ jobs:
         sudo bash run_verification.sh
         
         cp /testbed/results.json $GITHUB_WORKSPACE/
+        cp /testbed/test.patch $GITHUB_WORKSPACE/
+        cp /testbed/code.patch $GITHUB_WORKSPACE/
         
     - name: mergejson
       run: |
@@ -186,3 +188,5 @@ jobs:
             setup_repo.sh
             run_verification.py
             ${{ env.INSTANCE_DIR }}.json
+            test.patch
+            code.patch

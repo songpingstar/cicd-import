@@ -1,0 +1,9 @@
+name: pytest verification
+
+on:
+  push:
+    branches: [main]
+    
+jobs:
+  call-pytest-verification:
+    uses: ../google__pytype-1353/import.yml
