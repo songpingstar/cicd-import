@@ -76,6 +76,10 @@ jobs:
         sudo bash installconda.sh
         
         sed -i "s|MinicondaURL|$PY_URL|g" $GITHUB_WORKSPACE/Dockerfile
+        if [[ "$PY_URL" == "https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh" ]]; then
+            echo "检测到特定 Miniconda 版本，替换 conda 初始化命令..."
+            sed -i 's|^RUN conda init bash && conda config --add channels conda-forge && conda config --remove channels defaults$|RUN conda config --add channels conda-forge|' $GITHUB_WORKSPACE/Dockerfile
+        fi
       
         
     - name: setup_repo
