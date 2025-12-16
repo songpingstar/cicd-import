@@ -31,9 +31,8 @@ RUN wget 'MinicondaURL' -O miniconda.sh && \
 ENV PATH=/opt/miniconda3/bin:${PATH}
 
 # 初始化Conda，使其能够在shell脚本中被调用，并配置conda-forge渠道
-RUN conda init bash && \
-    conda config --add channels conda-forge && \
-    conda config --remove channels defaults
+RUN conda config --add channels conda-forge
+
 
 COPY setup_repo.sh /root/setup_repo.sh
 RUN chmod +x /root/setup_repo.sh && \
