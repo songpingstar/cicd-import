@@ -49,6 +49,7 @@ jobs:
       uses: ./.github/actions/pytest
             
   call-docker-verification:
+    runs-on: ubuntu-latest
     env:
       INSTANCE_DIR1: "getpelican__pelican-2818"
     needs: pytest-verification
