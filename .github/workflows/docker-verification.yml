@@ -1,0 +1,33 @@
+name: pytest verification
+
+on:
+  workflow_call:  # 添加这一行，使其可以被调用
+        
+  Docker-verification:
+    needs: pytest-verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact from verification
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.INSTANCE_DIR }}  # 必须和 upload 时的 name 一致
+          path: ./downloaded-reports  # 下载到这个目录
+          
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Build Docker image
+        run: |
+          cd ./downloaded-reports
+          docker build -t verification:latest .
+          
+      - name: Run script in container with mounted reports
+        run: |
+          # 确保目录存在
+          ls -la ./downloaded-reports  
+          # 运行容器，挂载目录，执行脚本，前台运行（自动退出）
+          docker run --rm  \
+          -v $GITHUB_WORKSPACE/downloaded-reports/test.patch:/testbed/test.patch \
+          -v $GITHUB_WORKSPACE/downloaded-reports/code.patch:/testbed/code.patch \
+          -v $GITHUB_WORKSPACE/downloaded-reports/run_verification.py:/testbed/run_verification.py \
+          verification:latest bash -c "ls -la && python run_verification.py"
