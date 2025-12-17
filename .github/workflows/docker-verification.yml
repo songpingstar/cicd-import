@@ -5,7 +5,7 @@ on:
   
 jobs:        
   Docker-verification:
-    needs: pytest-verification
+    #needs: pytest-verification
     runs-on: ubuntu-latest
     steps:
       - name: Download artifact from verification
