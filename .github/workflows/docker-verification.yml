@@ -24,7 +24,7 @@ jobs:
         
       - name: Build Docker image
         run: |
-          cd ./downloaded-reports/$INSTANCE_DIR
+          cd ./downloaded-reports/${{ env.INSTANCE_DIR }}
           docker build -t verification:latest .
           
       - name: Run script in container with mounted reports
