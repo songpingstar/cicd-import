@@ -51,5 +51,5 @@ jobs:
   call-docker-verification:
     needs: pytest-verification
     uses: ./.github/workflows/docker-verification.yml
-    with:                           # ✅ 通过 with 传递变量
+    with:                       
       instance-dir: ${{ env.INSTANCE_DIR }}
