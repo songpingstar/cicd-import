@@ -2,7 +2,8 @@ name: pytest verification
 
 on:
   workflow_call:  # 添加这一行，使其可以被调用
-        
+  
+jobs:        
   Docker-verification:
     needs: pytest-verification
     runs-on: ubuntu-latest
