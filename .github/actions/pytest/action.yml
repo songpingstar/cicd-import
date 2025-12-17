@@ -5,6 +5,7 @@ runs:
   using: "composite"
   steps:
     - name: Install system dependencies
+      shell: bash
       run: |
         sudo apt-get update && sudo apt-get install -y --no-install-recommends \
         wget \
@@ -19,6 +20,7 @@ runs:
         
 
     - name: Install Miniconda
+      shell: bash
       run: |
         echo "开始写入installconda.sh 文件====================="
         cat > installconda.sh << EOF
@@ -43,6 +45,7 @@ runs:
       
         
     - name: setup_repo
+      shell: bash
       run: |
         echo "开始写入setup_repo.sh 文件====================="
         cat > setup_repo.sh << EOF
@@ -59,6 +62,7 @@ runs:
 
 
     - name: setup_env
+      shell: bash
       run: |
         echo "python版本是："
         python --version
@@ -72,6 +76,7 @@ runs:
 
         
     - name: run pytest
+      shell: bash
       if: env.RUN_PYTEST == 'true'
       run: |
         echo "python版本是："
@@ -97,6 +102,7 @@ runs:
         sudo bash pytest.sh
         
     - name: run verification
+      shell: bash
       continue-on-error: true
       run: |
         echo "python版本是："
@@ -132,6 +138,7 @@ runs:
         cp /testbed/code.patch $GITHUB_WORKSPACE/
         
     - name: mergejson
+      shell: bash
       run: |
       
         sed -i "s|INSTANCE_DIR|$INSTANCE_DIR|g" mergejson.py
