@@ -46,7 +46,7 @@ jobs:
         EOF
 
     - name: Execute pytest steps
-        uses: ./.github/workflows/actions/pytest.yml
+        uses: ./.github/actions/pytest/pytest.yml
             
   call-docker-verification:
     needs: pytest-verification
