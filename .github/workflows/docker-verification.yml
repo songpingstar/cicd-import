@@ -2,6 +2,11 @@ name: pytest verification
 
 on:
   workflow_call:  # 添加这一行，使其可以被调用
+    inputs:
+      instance-dir:                # ✅ 接收主工作流传递的变量
+        description: 'Instance directory name'
+        required: true
+        type: string
   
 jobs:        
   Docker-verification:
@@ -19,16 +24,16 @@ jobs:
         
       - name: Build Docker image
         run: |
-          cd ./downloaded-reports/${{ env.INSTANCE_DIR }}
+          cd ./downloaded-reports/${{ inputs.instance-dir }}
           docker build -t verification:latest .
           
       - name: Run script in container with mounted reports
         run: |
           # 确保目录存在
-          ls -la ./downloaded-reports/$INSTANCE_DIR  
+          ls -la ./downloaded-reports/${{ inputs.instance-dir }}  
           # 运行容器，挂载目录，执行脚本，前台运行（自动退出）
           docker run --rm  \
-          -v $GITHUB_WORKSPACE/downloaded-reports/$INSTANCE_DIR/test.patch:/testbed/test.patch \
-          -v $GITHUB_WORKSPACE/downloaded-reports/$INSTANCE_DIR/code.patch:/testbed/code.patch \
-          -v $GITHUB_WORKSPACE/downloaded-reports/$INSTANCE_DIR/run_verification.py:/testbed/run_verification.py \
+          -v $GITHUB_WORKSPACE/downloaded-reports/${{ inputs.instance-dir }}/test.patch:/testbed/test.patch \
+          -v $GITHUB_WORKSPACE/downloaded-reports/${{ inputs.instance-dir }}/code.patch:/testbed/code.patch \
+          -v $GITHUB_WORKSPACE/downloaded-reports/${{ inputs.instance-dir }}/run_verification.py:/testbed/run_verification.py \
           verification:latest bash -c "ls -la && python run_verification.py"
