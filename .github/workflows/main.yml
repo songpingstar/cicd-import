@@ -6,12 +6,12 @@ on:
 
 env:
   REPO_URL: https://github.com/getpelican/pelican.git
-  INSTANCE_DIR: "getpelican__pelican-3215"
+  INSTANCE_DIR: "getpelican__pelican-3124"
   REPO_DIR: pelican
-  base_commit: fab6e1a2c51317b1ff3523755cd82f7b3ea3d433
+  base_commit: 86f62d0a92ad78df36aac9f5837d4f2715535421
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
-  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
-  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
+  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
+  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: pelican/tests/test_utils.py
   CONDA_DIR: /opt/miniconda3
   RUN_PYTEST: 'true'
@@ -22,7 +22,7 @@ jobs:
     needs: pytest-verification
     uses: ./.github/workflows/docker-verification.yml
     with:                       
-      instance-dir: getpelican__pelican-3215
+      instance-dir: getpelican__pelican-3124
       
   pytest-verification:
     name: pytest-verification
