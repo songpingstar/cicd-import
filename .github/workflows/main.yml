@@ -49,7 +49,9 @@ jobs:
       uses: ./.github/actions/pytest
             
   call-docker-verification:
+    env:
+      INSTANCE_DIR1: "getpelican__pelican-2818"
     needs: pytest-verification
     uses: ./.github/workflows/docker-verification.yml
     with:                       
-      instance-dir: ${{env.INSTANCE_DIR}}
+      instance-dir: ${{env.INSTANCE_DIR1}}
