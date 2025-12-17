@@ -9,8 +9,8 @@ env:
   INSTANCE_DIR: "getpelican__pelican-3441"
   REPO_DIR: pelican
   base_commit: 8a1c55ed07f9d749e7f45c1711f63fb93a51daa7
-  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
-  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
+  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
+  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: pelican/tests/test_plugins.py
   CONDA_DIR: /opt/miniconda3
