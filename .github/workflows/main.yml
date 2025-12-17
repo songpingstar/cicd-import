@@ -48,7 +48,7 @@ jobs:
         python -m pip install -U pip tox
         ###############################################
         pip install -e .
-        pip install -q -r requirements/test.pip
+        pip install -q -r requirements/developer.pip
         #pip install -q -r test-requirements.txt
         pip install -q --upgrade pytest
         #pip install -v pytest==6.2.5
