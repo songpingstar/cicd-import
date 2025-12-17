@@ -1,0 +1,62 @@
+diff --git a/docs/settings.rst b/docs/settings.rst
+index b442451a2..72c72fb1e 100644
+--- a/docs/settings.rst
++++ b/docs/settings.rst
+@@ -288,7 +288,14 @@ Basic settings
+ 
+    A list of tags for Typogrify to ignore. By default Typogrify will ignore
+    ``pre`` and ``code`` tags. This requires that Typogrify version 2.0.4 or
+-   later is installed
++   later is installed.
++
++.. data:: TYPOGRIFY_OMIT_FILTERS = []
++
++   A list of Typogrify filters to skip. Allowed values are: ``'amp'``,
++   ``'smartypants'``, ``'caps'``, ``'initial_quotes'``, ``'widont'``. By
++   default, no filter is omitted (in other words, all filters get applied). This
++   setting requires that Typogrify version 2.1.0 or later is installed.
+ 
+ .. data:: TYPOGRIFY_DASHES = 'default'
+ 
+diff --git a/pelican/readers.py b/pelican/readers.py
+index 59aa7ca33..182194fe1 100644
+--- a/pelican/readers.py
++++ b/pelican/readers.py
+@@ -648,11 +648,22 @@ def read_file(
+             smartypants.Attr.default |= smartypants.Attr.w
+ 
+             def typogrify_wrapper(text):
+-                """Ensures ignore_tags feature is backward compatible"""
++                """Ensure compatibility with older versions of Typogrify.
++
++                The 'TYPOGRIFY_IGNORE_TAGS' and/or 'TYPOGRIFY_OMIT_FILTERS'
++                settings will be ignored if the installed version of Typogrify
++                doesn't have the corresponding features."""
+                 try:
+-                    return typogrify(text, self.settings["TYPOGRIFY_IGNORE_TAGS"])
++                    return typogrify(
++                        text,
++                        self.settings["TYPOGRIFY_IGNORE_TAGS"],
++                        **{f: False for f in self.settings["TYPOGRIFY_OMIT_FILTERS"]},
++                    )
+                 except TypeError:
+-                    return typogrify(text)
++                    try:
++                        typogrify(text, self.settings["TYPOGRIFY_IGNORE_TAGS"])
++                    except TypeError:
++                        return typogrify(text)
+ 
+             if content:
+                 content = typogrify_wrapper(content)
+diff --git a/pelican/settings.py b/pelican/settings.py
+index 69120058a..1fb0b2111 100644
+--- a/pelican/settings.py
++++ b/pelican/settings.py
+@@ -149,6 +149,7 @@ def load_source(name: str, path: str) -> ModuleType:
+     "ARTICLE_PERMALINK_STRUCTURE": "",
+     "TYPOGRIFY": False,
+     "TYPOGRIFY_IGNORE_TAGS": [],
++    "TYPOGRIFY_OMIT_FILTERS": [],
+     "TYPOGRIFY_DASHES": "default",
+     "SUMMARY_END_SUFFIX": "…",
+     "SUMMARY_MAX_LENGTH": 50,
