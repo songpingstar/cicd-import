@@ -7,13 +7,13 @@ runs:
     - name: Install system dependencies
       shell: bash
       run: |
-        apt-get update && apt-get install -y --no-install-recommends \
+        sudo apt-get update && sudo apt-get install -y --no-install-recommends \
         wget \
         git \
         ca-certificates \
         curl \
         vim \
-        dos2unix 
+        dos2unix \
         # python3 \
         # python3-pip \
         # python-is-python3 
@@ -35,7 +35,7 @@ runs:
         EOF
         
         echo "开始执行installconda.sh 文件====================="
-        bash installconda.sh
+        sudo bash installconda.sh
         
         sed -i "s|MinicondaURL|$PY_URL|g" $GITHUB_WORKSPACE/Dockerfile
         if [[ "$PY_URL" == "https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh" ]]; then
@@ -58,7 +58,7 @@ runs:
         EOF
         
         echo "开始执行setup_repo.sh 脚本"
-        bash setup_repo.sh
+        sudo bash setup_repo.sh
 
 
     - name: setup_env
@@ -70,7 +70,7 @@ runs:
         which pip
     
         echo "开始执行setup_env 脚本====================="
-        bash setup_env.sh
+        sudo bash setup_env.sh
         sed -i '/source \/opt\/miniconda3\/etc\/profile.d\/conda.sh/d' setup_env.sh
         sed -i '/conda activate base/d' setup_env.sh
 
@@ -81,15 +81,16 @@ runs:
       run: |
         echo "python版本是："
         python --version
-        # echo "pytest版本是："
-        # pytest --version
-        # echo "pytest路径是："
-        # which pytest
+        echo "pytest版本是："
+        pytest --version
+        echo "pytest路径是："
+        which pytest
         echo "开始写入pytest.sh 脚本====================="
         cat > pytest.sh << EOF
         #!/bin/bash
         source /opt/miniconda3/etc/profile.d/conda.sh
-        conda activate clean
+        conda activate base
+        export httpretty.allow_net_connect=True
         cd /testbed/$REPO_DIR
         pytest $TEST_FILE
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
@@ -99,7 +100,7 @@ runs:
         EOF
         
         echo "开始执行pytest.sh 脚本====================="
-        bash pytest.sh
+        sudo bash pytest.sh
         
     - name: run verification
       shell: bash
@@ -131,7 +132,7 @@ runs:
         EOF
         
         echo "开始执行run_verification.sh 脚本====================="
-        bash run_verification.sh
+        sudo bash run_verification.sh
         
         cp /testbed/results.json $GITHUB_WORKSPACE/
         cp /testbed/test.patch $GITHUB_WORKSPACE/
