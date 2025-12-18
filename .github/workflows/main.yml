@@ -54,7 +54,7 @@ jobs:
         #pip install -q -r requirements/types.txt
         #pip install -q -r test-requirements.txt
         #pip install -q --upgrade pytest
-        #pip install -v pytest==6.2.5
+        pip install -v pytest==8.4.2
         EOF
 
     - name: Execute pytest steps
