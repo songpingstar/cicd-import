@@ -19,7 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # --- Python 基础 ---
     python3 \
     python3-pip \
-    python-is-python3 
+    python-is-python3 \
+    build-essential 
 
 # 2. 安装Miniconda3（Python 3.11）
 RUN wget 'https://repo.anaconda.com/miniconda/Miniconda3-py311_23.11.0-2-Linux-x86_64.sh' -O miniconda.sh && \
@@ -34,11 +35,12 @@ RUN conda init bash && \
     conda config --add channels conda-forge && \
     conda config --remove channels defaults
 
+# --- 核心修改：先执行 setup_repo.sh 进行 git clone ---
 COPY setup_repo.sh /root/setup_repo.sh
 RUN chmod +x /root/setup_repo.sh && \
     /bin/bash /root/setup_repo.sh
 
-
+# --- 然后执行 setup_env.sh 进行依赖安装 ---
 COPY setup_env.sh /root/setup_env.sh
 RUN chmod +x /root/setup_env.sh && \
     # 在一个已初始化Conda的bash环境中执行脚本
