@@ -49,11 +49,11 @@ jobs:
         uv sync --all-groups
         uv pip install faiss-cpu
         ###############################################
-        #pip install -e .
+        pip install -e .
         #pip install -q -r requirements/test.txt
         #pip install -q -r requirements/types.txt
         #pip install -q -r test-requirements.txt
-        pip install -q --upgrade pytest
+        #pip install -q --upgrade pytest
         #pip install -v pytest==6.2.5
         EOF
 
