@@ -43,7 +43,7 @@ jobs:
         source /opt/miniconda3/etc/profile.d/conda.sh
         conda activate base
         ###############################################
-      
+        export httpretty.allow_net_connect=True
         pip install -q --upgrade pip setuptools
         pip install -U build twine
         python -m pip install -q tox tox-gh-actions
