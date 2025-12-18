@@ -45,7 +45,7 @@ jobs:
         conda activate base
         ###############################################
         pip install -q --upgrade pip setuptools
-        pip install pytest_socket
+        pip install -q pytest_socket botocore
         ###############################################
         pip install -e .
         #pip install -q -r requirements/test.txt
