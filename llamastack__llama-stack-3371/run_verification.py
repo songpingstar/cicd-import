@@ -11,9 +11,9 @@ import xml.etree.ElementTree as ET
 # 请在这里设置你的代码仓库的绝对路径
 REPO_PATH = "/testbed/llama-stack"
 # 要进行测试的基础 commit 哈希
-BASE_COMMIT = "426cac078b75e6f52dff2c16240989fd924a1f11"
+BASE_COMMIT = "b6cb8178976b941a1fdb3894b00bd13eaca91561"
 # 实例ID，用于结果文件的顶级键
-INSTANCE_ID = 'llamastack__llama-stack-3341'
+INSTANCE_ID = 'llamastack__llama-stack-3371'
 
 # --- 路径配置 (自动计算) ---
 SCRIPT_DIR = Path(__file__).resolve().parent
