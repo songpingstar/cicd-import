@@ -82,7 +82,7 @@ runs:
         echo "python版本是："
         python --version
         echo "pytest版本是："
-        pytest --version
+        uv run pytest --version
         echo "pytest路径是："
         which pytest
         echo "开始写入pytest.sh 脚本====================="
@@ -91,11 +91,11 @@ runs:
         source /opt/miniconda3/etc/profile.d/conda.sh
         conda activate base
         cd /testbed/$REPO_DIR
-        pytest $TEST_FILE
+        uv run pytest $TEST_FILE
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
-        pytest $TEST_FILE || true
+        uv run pytest $TEST_FILE || true
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/code.patch 
-        pytest $TEST_FILE
+        uv run pytest $TEST_FILE
         EOF
         
         echo "开始执行pytest.sh 脚本====================="

@@ -45,14 +45,16 @@ jobs:
         conda activate base
         ###############################################
         pip install -q --upgrade pip setuptools
-        pip install -q pytest_socket botocore
+        pip install uv
+        uv sync --all-groups
+        uv pip install faiss-cpu
         ###############################################
-        pip install -e .
+        #pip install -e .
         #pip install -q -r requirements/test.txt
         #pip install -q -r requirements/types.txt
         #pip install -q -r test-requirements.txt
         #pip install -q --upgrade pytest
-        pip install -v pytest==8.4.2
+        #pip install -v pytest==8.4.2
         EOF
 
     - name: Execute pytest steps
