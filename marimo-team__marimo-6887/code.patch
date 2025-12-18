@@ -1,0 +1,18 @@
+diff --git a/marimo/_plugins/ui/_impl/altair_chart.py b/marimo/_plugins/ui/_impl/altair_chart.py
+index 87c3c272e99..347f6e40b2b 100644
+--- a/marimo/_plugins/ui/_impl/altair_chart.py
++++ b/marimo/_plugins/ui/_impl/altair_chart.py
+@@ -612,6 +612,13 @@ def maybe_make_full_width(chart: AltairChartType) -> AltairChartType:
+             isinstance(chart, (alt.Chart, alt.LayerChart))
+             and chart.width is alt.Undefined
+         ):
++            # Don't make full width if chart has column encoding (faceted)
++            if (
++                hasattr(chart, "encoding")
++                and hasattr(chart.encoding, "column")
++                and chart.encoding.column is not alt.Undefined
++            ):
++                return chart
+             return chart.properties(width="container")
+         return chart
+     except Exception:

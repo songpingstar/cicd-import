@@ -18,6 +18,10 @@ runs:
         # python3-pip \
         # python-is-python3 
         
+
+    - name: Install Miniconda
+      shell: bash
+      run: |
         echo "开始写入installconda.sh 文件====================="
         cat > installconda.sh << EOF
         #!/bin/bash
@@ -39,6 +43,10 @@ runs:
             sed -i 's|^RUN conda init bash && conda config --add channels conda-forge && conda config --remove channels defaults$|RUN conda config --add channels conda-forge|' $GITHUB_WORKSPACE/Dockerfile
         fi
       
+        
+    - name: setup_repo
+      shell: bash
+      run: |
         echo "开始写入setup_repo.sh 文件====================="
         cat > setup_repo.sh << EOF
         #!/bin/bash
@@ -52,6 +60,10 @@ runs:
         echo "开始执行setup_repo.sh 脚本"
         sudo bash setup_repo.sh
 
+
+    - name: setup_env
+      shell: bash
+      run: |
         echo "python版本是："
         python --version
         echo "pip执行路径是："
@@ -62,14 +74,18 @@ runs:
         sed -i '/source \/opt\/miniconda3\/etc\/profile.d\/conda.sh/d' setup_env.sh
         sed -i '/conda activate base/d' setup_env.sh
 
-        echo "开始写入pytest.sh 脚本====================="
+        
+    - name: run pytest
+      shell: bash
+      if: env.RUN_PYTEST == 'true'
+      run: |
         echo "python版本是："
         python --version
         echo "pytest版本是："
         uv run pytest --version
         echo "pytest路径是："
         which pytest
-        
+        echo "开始写入pytest.sh 脚本====================="
         cat > pytest.sh << EOF
         #!/bin/bash
         source /opt/miniconda3/etc/profile.d/conda.sh

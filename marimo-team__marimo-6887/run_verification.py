@@ -9,11 +9,11 @@ import xml.etree.ElementTree as ET
 
 # --- 配置 ---
 # 请在这里设置你的代码仓库的绝对路径
-REPO_PATH = "/testbed/llama-stack"
+REPO_PATH = "/testbed/marimo"
 # 要进行测试的基础 commit 哈希
-BASE_COMMIT = "167143131053c8de6ea620a83ebdec41c0b24e50"
+BASE_COMMIT = "12b174df72d8731ee62f6c90d108711db5719ebf"
 # 实例ID，用于结果文件的顶级键
-INSTANCE_ID = 'llamastack__llama-stack-3386'
+INSTANCE_ID = 'marimo-team__marimo-6887'
 
 # --- 路径配置 (自动计算) ---
 SCRIPT_DIR = Path(__file__).resolve().parent

@@ -5,15 +5,15 @@ on:
     branches: [main]
 
 env:
-  INSTANCE_DIR: "llamastack__llama-stack-3386"
-  REPO_DIR: llama-stack
-  base_commit: 167143131053c8de6ea620a83ebdec41c0b24e50
-  REPO_URL: https://github.com/llamastack/llama-stack.git
+  INSTANCE_DIR: "marimo-team__marimo-6887"
+  REPO_DIR: marimo
+  base_commit: 12b174df72d8731ee62f6c90d108711db5719ebf
+  REPO_URL: https://github.com/marimo-team/marimo.git
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
-  TEST_FILE: tests/unit/providers/test_bedrock.py
+  TEST_FILE: marimo/_smoke_tests/altair_examples/column_facet.py
   CONDA_DIR: /opt/miniconda3
   RUN_PYTEST: 'true'
 
@@ -23,7 +23,7 @@ jobs:
     needs: pytest-verification
     uses: ./.github/workflows/docker-verification.yml
     with:                       
-      instance-dir: llamastack__llama-stack-3386
+      instance-dir: marimo-team__marimo-6887
       
   pytest-verification:
     name: pytest-verification
@@ -45,17 +45,13 @@ jobs:
         conda activate base
         ###############################################
         pip install -q --upgrade pip setuptools
-        pip install uv
-        uv sync --all-groups
-        uv pip install ollama faiss-cpu fireworks fireworks-ai botocore boto3
-        uv pip install -e .
         ###############################################
-        #pip install -e .
+        pip install -e .
         #pip install -q -r requirements/test.txt
         #pip install -q -r requirements/types.txt
         #pip install -q -r test-requirements.txt
         #pip install -q --upgrade pytest
-        #pip install -v pytest==8.4.2
+        pip install -v pytest==8.4.2
         EOF
 
     - name: Execute pytest steps
