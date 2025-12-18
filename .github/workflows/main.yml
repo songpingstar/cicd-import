@@ -10,8 +10,9 @@ env:
   base_commit: b6cb8178976b941a1fdb3894b00bd13eaca91561
   REPO_URL: https://github.com/llamastack/llama-stack.git
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
-  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
+  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
+  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: tests/integration/scoring/test_scoring.py
   CONDA_DIR: /opt/miniconda3
   RUN_PYTEST: 'true'
@@ -43,9 +44,10 @@ jobs:
         source /opt/miniconda3/etc/profile.d/conda.sh
         conda activate base
         ###############################################
-        
         pip install -q --upgrade pip setuptools
-        pip install -q faiss-cpu
+        pip install uv
+        uv sync --all-groups
+        uv pip install faiss-cpu
         ###############################################
         #pip install -e .
         #pip install -q -r requirements/test.txt
