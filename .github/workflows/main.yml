@@ -45,7 +45,7 @@ jobs:
         conda activate base
         ###############################################
         pip install -q --upgrade pip setuptools
-        pip install -q faiss-cpu pytest_socket
+        pip install -q faiss-cpu 
         ###############################################
         pip install -e .
         #pip install -q -r requirements/test.txt
