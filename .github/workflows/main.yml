@@ -29,6 +29,9 @@ jobs:
     name: pytest-verification
     runs-on: ubuntu-22.04
     environment: production
+    container:
+      image: ubuntu:22.04      # 容器镜像
+      options: --rm            # Docker 运行选项
     
     steps:
     - name: Checkout code
