@@ -44,8 +44,9 @@ jobs:
         cat > setup_env.sh << EOF
         #!/bin/bash
         cd /testbed/$REPO_DIR
+        conda create -n clean python=3.12 -y
         source /opt/miniconda3/etc/profile.d/conda.sh
-        conda activate base
+        conda activate clean
         ###############################################
         pip install -q --upgrade pip setuptools
         pip install -q faiss-cpu 
