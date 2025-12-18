@@ -35,7 +35,7 @@ runs:
         EOF
         
         echo "开始执行installconda.sh 文件====================="
-        sudo bash installconda.sh
+        bash installconda.sh
         
         sed -i "s|MinicondaURL|$PY_URL|g" $GITHUB_WORKSPACE/Dockerfile
         if [[ "$PY_URL" == "https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh" ]]; then
@@ -58,7 +58,7 @@ runs:
         EOF
         
         echo "开始执行setup_repo.sh 脚本"
-        sudo bash setup_repo.sh
+        bash setup_repo.sh
 
 
     - name: setup_env
@@ -70,7 +70,7 @@ runs:
         which pip
     
         echo "开始执行setup_env 脚本====================="
-        sudo bash setup_env.sh
+        bash setup_env.sh
         sed -i '/source \/opt\/miniconda3\/etc\/profile.d\/conda.sh/d' setup_env.sh
         sed -i '/conda activate base/d' setup_env.sh
 
@@ -99,7 +99,7 @@ runs:
         EOF
         
         echo "开始执行pytest.sh 脚本====================="
-        sudo bash pytest.sh
+        bash pytest.sh
         
     - name: run verification
       shell: bash
@@ -131,7 +131,7 @@ runs:
         EOF
         
         echo "开始执行run_verification.sh 脚本====================="
-        sudo bash run_verification.sh
+        bash run_verification.sh
         
         cp /testbed/results.json $GITHUB_WORKSPACE/
         cp /testbed/test.patch $GITHUB_WORKSPACE/
