@@ -81,10 +81,10 @@ runs:
       run: |
         echo "python版本是："
         python --version
-        echo "pytest版本是："
-        pytest --version
-        echo "pytest路径是："
-        which pytest
+        # echo "pytest版本是："
+        # pytest --version
+        # echo "pytest路径是："
+        # which pytest
         echo "开始写入pytest.sh 脚本====================="
         cat > pytest.sh << EOF
         #!/bin/bash
