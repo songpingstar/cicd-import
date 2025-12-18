@@ -8,8 +8,8 @@ echo ">>> Cloning repository: llamastack/llama-stack..."
 # Clone 代码到 /testbed/repo_name
 git clone https://github.com/llamastack/llama-stack.git /testbed/llama-stack
 
-echo ">>> Checking out commit: b6cb8178976b941a1fdb3894b00bd13eaca91561..."
+echo ">>> Checking out commit: 167143131053c8de6ea620a83ebdec41c0b24e50..."
 cd /testbed/llama-stack
-git checkout b6cb8178976b941a1fdb3894b00bd13eaca91561
+git checkout 167143131053c8de6ea620a83ebdec41c0b24e50
 
 echo ">>> Repository setup complete."

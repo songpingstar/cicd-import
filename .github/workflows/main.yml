@@ -5,15 +5,15 @@ on:
     branches: [main]
 
 env:
-  INSTANCE_DIR: "llamastack__llama-stack-3371"
+  INSTANCE_DIR: "llamastack__llama-stack-3386"
   REPO_DIR: llama-stack
-  base_commit: b6cb8178976b941a1fdb3894b00bd13eaca91561
+  base_commit: 167143131053c8de6ea620a83ebdec41c0b24e50
   REPO_URL: https://github.com/llamastack/llama-stack.git
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
-  TEST_FILE: tests/integration/scoring/test_scoring.py
+  TEST_FILE: tests/unit/providers/test_bedrock.py
   CONDA_DIR: /opt/miniconda3
   RUN_PYTEST: 'true'
 
@@ -23,7 +23,7 @@ jobs:
     needs: pytest-verification
     uses: ./.github/workflows/docker-verification.yml
     with:                       
-      instance-dir: llamastack__llama-stack-3371
+      instance-dir: llamastack__llama-stack-3386
       
   pytest-verification:
     name: pytest-verification
