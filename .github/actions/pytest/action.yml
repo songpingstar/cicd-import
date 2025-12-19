@@ -15,6 +15,8 @@ runs:
         # vim \
         # dos2unix 
 
+        echo "当前执行用户是====================="
+        whoami
         
         echo "开始执行installconda.sh 文件====================="
         wget -q $PY_URL -O miniconda.sh
@@ -58,7 +60,7 @@ runs:
 
     
         echo "开始执行setup_env 脚本====================="
-        sudo bash setup_env.sh
+        bash setup_env.sh
        
         echo "pytest版本是："
         pytest --version 
@@ -78,7 +80,7 @@ runs:
         
         echo "开始执行pytest.sh 脚本====================="
         if [[ "$RUN_PYTEST" == 'true' ]]; then
-            sudo bash pytest.sh
+            bash pytest.sh
         fi
     - name: run verification
       shell: bash
@@ -110,7 +112,7 @@ runs:
         EOF
         
         echo "开始执行run_verification.sh 脚本====================="
-        sudo bash run_verification.sh
+        bash run_verification.sh
         
         cp /testbed/results.json $GITHUB_WORKSPACE/
         cp /testbed/test.patch $GITHUB_WORKSPACE/
