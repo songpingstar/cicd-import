@@ -8,25 +8,40 @@ runs:
       shell: bash
       run: |
         sudo apt-get update && sudo apt-get install -y --no-install-recommends \
-        wget \
-        git \
-        ca-certificates \
-        curl \
-        vim \
-        dos2unix 
+        wget 
+        #git \
+        #ca-certificates \
+        #curl \
+        #vim \
+        #dos2unix 
         # python3 \
         # python3-pip \
         # python-is-python3 
         
-        echo "开始写入installconda.sh 文件====================="
+        echo "开始执行installconda.sh 文件====================="
         wget -q $PY_URL -O miniconda.sh
         bash miniconda.sh -b -p $CONDA_DIR
         rm miniconda.sh
+        
+        echo "启动conda base 环境====================="
+        source /opt/miniconda3/etc/profile.d/conda.sh
+        conda activate base
         PATH=/opt/miniconda3/bin:${PATH}
         echo "/opt/miniconda3/bin" >> $GITHUB_PATH
+        
+        
         echo "python版本是："
         python --version
-
+        echo "pip执行路径是："
+        which pip
+        echo "PATH路径是："
+        echo $PATH
+        
+        echo "下载zip压缩包======================================"
+        wget https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%8F%91%E5%B8%83%E7%9A%84-12.15/marimo-team__marimo/marimo-team__marimo-6887.zip?Expires=1766969106&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=pH2hbS2IVO4FPMamDl9nvd1JVfI%3D
+        pwd
+        ls
+      
         
         sed -i "s|MinicondaURL|$PY_URL|g" $GITHUB_WORKSPACE/Dockerfile
         
@@ -45,25 +60,19 @@ runs:
         cd ..
         EOF
         
-        echo "开始执行setup_repo.sh 脚本"
+        echo "开始执行setup_repo.sh 脚本====================="
         sudo bash setup_repo.sh
 
-        echo "python版本是："
-        python --version
-        echo "pip执行路径是："
-        which pip
     
         echo "开始执行setup_env 脚本====================="
         sudo bash setup_env.sh
        
-
-        echo "python版本是："
-        python --version
         echo "pytest版本是："
         uv run pytest --version
         echo "pytest路径是："
         which pytest
-        echo "开始写入pytest.sh 脚本====================="
+        
+        echo "开始执行pytest.sh 脚本====================="
         cd /testbed/$REPO_DIR
         pytest $TEST_FILE
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 

@@ -41,6 +41,7 @@ jobs:
         cat > setup_env.sh << EOF
         #!/bin/bash
         cd /testbed/$REPO_DIR
+        conda activate base
         ###############################################
         pip install -q --upgrade pip setuptools
         ###############################################
@@ -50,7 +51,7 @@ jobs:
         #pip install -q -r requirements/types.txt
         #pip install -q -r test-requirements.txt
         #pip install -q --upgrade pytest
-        pip install -v pytest==8.4.2
+        #pip install -v pytest==8.4.2
         EOF
 
     - name: Execute pytest steps
