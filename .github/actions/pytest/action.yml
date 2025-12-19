@@ -60,6 +60,8 @@ runs:
 
         echo "开始安装pixi工具====================="
         curl -fsSL https://pixi.sh/install.sh | bash
+        source ~/.bashrc
+        pixi --version
         
         echo "开始执行setup_env 脚本========================="
         bash setup_env.sh
