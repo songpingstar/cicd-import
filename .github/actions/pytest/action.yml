@@ -56,14 +56,16 @@ runs:
         EOF
         
         echo "开始执行setup_repo.sh 脚本====================="
-        sudo bash setup_repo.sh
+        bash setup_repo.sh
 
-    
-        echo "开始执行setup_env 脚本====================="
+        echo "开始安装pixi工具====================="
+        curl -fsSL https://pixi.sh/install.sh | bash
+        
+        echo "开始执行setup_env 脚本========================="
         bash setup_env.sh
        
         echo "pytest版本是："
-        pytest --version 
+        pixi run pytest --version 
         echo "pytest路径是："
         which pytest
         
