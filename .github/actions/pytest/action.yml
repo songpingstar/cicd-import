@@ -7,13 +7,13 @@ runs:
     - name: Install system dependencies
       shell: bash
       run: |
-        sudo apt-get update && sudo apt-get install -y --no-install-recommends \
-        wget \     
-        git \
-        ca-certificates \
-        curl \
-        vim \
-        dos2unix 
+        # sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+        # wget \     
+        # git \
+        # ca-certificates \
+        # curl \
+        # vim \
+        # dos2unix 
 
         
         echo "开始执行installconda.sh 文件====================="
