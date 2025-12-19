@@ -8,8 +8,7 @@ runs:
       shell: bash
       run: |
         sudo apt-get update && sudo apt-get install -y --no-install-recommends \
-        wget
-        unzip        
+        wget      
         #git \
         #ca-certificates \
         #curl \
@@ -37,14 +36,7 @@ runs:
         which pip
         echo "PATH路径是："
         echo $PATH
-        
-        echo "下载zip压缩包======================================"
-        BASE_URL='https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%8F%91%E5%B8%83%E7%9A%84-12.15/marimo-team__marimo/marimo-team__marimo-6887.zip?Expires=1766969106&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=pH2hbS2IVO4FPMamDl9nvd1JVfI%3D'
-        wget -O marimo-team__marimo-6887.zip "$BASE_URL"
-        unzip marimo-team__marimo-6887.zip -d marimo-team__marimo-6887
-        pwd
-        ls
-      
+         
         
         sed -i "s|MinicondaURL|$PY_URL|g" $GITHUB_WORKSPACE/Dockerfile
         
