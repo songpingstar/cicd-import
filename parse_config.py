@@ -1,10 +1,15 @@
 import yaml
 import re
 import os
+import sys
 
 def main():
+
+    # 从环境变量获取实例名称
+    instance_name = os.environ.get('INSTANCE_NAME', '')
+	
     # 读取配置文件
-    with open('marimo-team__marimo-6887/marimo-team__marimo-6887.json', 'r') as f:
+    with open(f'{instance_name}/{instance_name}.json', 'r') as f:
         data = yaml.safe_load(f)
     
     # 提取原始字段
