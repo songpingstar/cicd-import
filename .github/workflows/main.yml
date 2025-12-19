@@ -24,9 +24,9 @@ jobs:
     name: pytest-verification
     runs-on: ubuntu-22.04
     # 使用 root 用户运行整个作业
-    permissions:
-      contents: read
-      packages: write
+    container:
+      image: ubuntu:22.04
+      options: --user root
     environment: production 
     steps:
     
