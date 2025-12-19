@@ -51,9 +51,9 @@ jobs:
         cd /testbed/$REPO_DIR
         ###############################################
         pip install -q --upgrade pip setuptools
-        ###############################################
         pip install uv
-        uv pip install pytest
+        #uv pip install pytest
+        ###############################################
         #pip install -e .
         #pip install -q -r requirements/test.txt
         #pip install -q -r requirements/types.txt
