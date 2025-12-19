@@ -36,9 +36,20 @@ jobs:
     - name: wget file
       run: |
         whoami
-        apt-get update
-        apt-get install -y wget git unzip
-         
+        RUN apt-get update && apt-get install -y --no-install-recommends \
+        # --- 通用工具 ---
+        wget \
+        bzip2 \
+        git \
+        ca-certificates \
+        curl \
+        vim \
+        dos2unix \
+        # --- Python 基础 ---
+        python3 \
+        python3-pip \
+        python-is-python3
+        
         export INSTANCE_NAME=$(echo "$BASE_URL" | grep -o 'marimo-team__marimo-[0-9]*' | head -1)
         
         echo "下载zip压缩包======================================"
@@ -48,7 +59,7 @@ jobs:
         ls
         
         echo "设置环境变量======================================"
-        python3 parse_config.py
+        python parse_config.py
 
     - name: write setup_env
       run: |
