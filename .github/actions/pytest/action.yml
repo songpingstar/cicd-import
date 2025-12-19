@@ -61,7 +61,7 @@ runs:
         sudo bash setup_env.sh
        
         echo "pytest版本是："
-        pytest --version || true
+        pytest --version 
         echo "pytest路径是："
         which pytest
         
