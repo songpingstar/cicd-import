@@ -35,6 +35,8 @@ jobs:
       
     - name: wget file
       run: |
+        whoami
+        apt-get update
         apt-get install -y wget git unzip
          
         export INSTANCE_NAME=$(echo "$BASE_URL" | grep -o 'marimo-team__marimo-[0-9]*' | head -1)
