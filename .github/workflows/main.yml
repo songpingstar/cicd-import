@@ -19,18 +19,11 @@ env:
   BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%8F%91%E5%B8%83%E7%9A%84-12.15/marimo-team__marimo/marimo-team__marimo-6887.zip?Expires=1766973586&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=c63pko5wAlnyaifEzxDUzIUnouU%3D'
 
 jobs:
-
-  call-docker-verification:
-    needs: pytest-verification
-    uses: ./.github/workflows/docker-verification.yml
-    with:                       
-      instance-dir: marimo-team__marimo-6887
       
   pytest-verification:
     name: pytest-verification
     runs-on: ubuntu-22.04
-    environment: production
-    
+    environment: production 
     steps:
     
     - name: Checkout code
@@ -71,3 +64,17 @@ jobs:
     - name: Execute pytest steps
       uses: ./.github/actions/pytest
             
+  call-docker-verification:
+    needs: pytest-verification
+    name: docker-verification
+    runs-on: ubuntu-22.04
+    steps:
+    
+    - name: get setup_env
+      run: |
+      INSTANCE_DIR=$(echo "$BASE_URL" | sed -n 's/.*\/\([^\/?]*\)\.zip.*/\1/p')
+      echo "Extracted using sed: $INSTANCE_DIR"
+      echo "INSTANCE_DIR=$INSTANCE_DIR" >> $GITHUB_ENV
+      
+    - name: Execute docker-verification steps
+      uses: ./.github/actions/docker-verification/docker-verification.yml
