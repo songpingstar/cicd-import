@@ -18,7 +18,7 @@ runs:
         
         echo "开始执行installconda.sh 文件====================="
         wget -q $PY_URL -O miniconda.sh
-        bash miniconda.sh -b -p $CONDA_DIR
+        bash miniconda.sh -b -p /opt/miniconda3
         rm miniconda.sh
         
         echo "启动conda base 环境====================="
