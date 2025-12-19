@@ -16,7 +16,7 @@ env:
   TEST_FILE: marimo/_smoke_tests/altair_examples/column_facet.py
   CONDA_DIR: /opt/miniconda3
   RUN_PYTEST: 'false'
-  BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%8F%91%E5%B8%83%E7%9A%84-12.15/marimo-team__marimo/marimo-team__marimo-6835.zip?Expires=1766993763&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=GKBEqWs5WFcoIgpGseWUArvQhtk%3D'
+  BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%8F%91%E5%B8%83%E7%9A%84-12.15/marimo-team__marimo/marimo-team__marimo-6827.zip?Expires=1766994828&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=fExe%2F9rWXnEe9PhDx0RHhHZRAj8%3D'
 
 jobs:
       
