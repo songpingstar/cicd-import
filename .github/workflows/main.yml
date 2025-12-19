@@ -39,7 +39,7 @@ jobs:
     - name: wget file
       run: |
       
-        INSTANCE_NAME=$(echo "$BASE_URL" | grep -o 'marimo-team__marimo-[0-9]*' | head -1)
+        export INSTANCE_NAME=$(echo "$BASE_URL" | grep -o 'marimo-team__marimo-[0-9]*' | head -1)
         
         echo "下载zip压缩包======================================"
         wget -O $INSTANCE_NAME.zip "$BASE_URL"
