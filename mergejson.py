@@ -18,7 +18,7 @@ def merge_json_files():
     pygithub_data['FAIL_TO_PASS'] = fail_to_pass
     pygithub_data['PASS_TO_PASS'] = pass_to_pass
     pygithub_data['language'] = "Python"
-    pygithub_data['content_catagory'] = ["工具"]
+    pygithub_data['content_category'] = ["工具"]
 
     # 写回文件
     with open(r'INSTANCE_DIR.json', 'w', encoding='utf-8') as f:
