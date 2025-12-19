@@ -35,7 +35,15 @@ jobs:
       
     - name: wget file
       run: |
-      
+        apt-get update && sudo apt-get install -y --no-install-recommends \
+         wget \     
+         git \
+         unzip \
+         ca-certificates \
+         curl \
+         vim \
+         dos2unix 
+         
         export INSTANCE_NAME=$(echo "$BASE_URL" | grep -o 'marimo-team__marimo-[0-9]*' | head -1)
         
         echo "下载zip压缩包======================================"
