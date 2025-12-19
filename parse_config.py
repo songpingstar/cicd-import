@@ -4,7 +4,7 @@ import os
 
 def main():
     # 读取配置文件
-    with open('marimo-team__marimo-6887/marimo-team__marimo-6887.yml', 'r') as f:
+    with open('marimo-team__marimo-6887/marimo-team__marimo-6887.json', 'r') as f:
         data = yaml.safe_load(f)
     
     # 提取原始字段
