@@ -1,9 +1,0 @@
-diff a/.github/workflows/main.yml b/.github/workflows/main.yml	(rejected hunks)
-@@ -41,7 +41,6 @@
-         cat > setup_env.sh << EOF
-         #!/bin/bash
-         cd /testbed/$REPO_DIR
--        conda activate base
-         ###############################################
-         pip install -q --upgrade pip setuptools
-         ###############################################
