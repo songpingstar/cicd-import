@@ -56,7 +56,6 @@ jobs:
         cat > setup_env.sh << EOF
         #!/bin/bash
         cd /testbed/$REPO_DIR
-        conda activate base
         ###############################################
         pip install -q --upgrade pip setuptools
         ###############################################
