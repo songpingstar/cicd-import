@@ -15,17 +15,18 @@ runs:
       - name: Build Docker image
         shell: bash
         run: |
-          cd ./downloaded-reports/$INSTANCE_DIR
+          ls ./downloaded-reports
+          cd ./downloaded-reports
           docker build -t verification:latest .
           
       - name: Run script in container with mounted reports
         shell: bash
         run: |
           # 确保目录存在
-          ls -la ./downloaded-reports/$INSTANCE_DIR 
+          ls -la ./downloaded-reports 
           # 运行容器，挂载目录，执行脚本，前台运行（自动退出）
           docker run --rm  \
-          -v $GITHUB_WORKSPACE/downloaded-reports/$INSTANCE_DIR/test.patch:/testbed/test.patch \
-          -v $GITHUB_WORKSPACE/downloaded-reports/$INSTANCE_DIR/code.patch:/testbed/code.patch \
-          -v $GITHUB_WORKSPACE/downloaded-reports/$INSTANCE_DIR/run_verification.py:/testbed/run_verification.py \
+          -v $GITHUB_WORKSPACE/downloaded-reports/test.patch:/testbed/test.patch \
+          -v $GITHUB_WORKSPACE/downloaded-reports/code.patch:/testbed/code.patch \
+          -v $GITHUB_WORKSPACE/downloaded-reports/run_verification.py:/testbed/run_verification.py \
           verification:latest bash -c "ls -la && python run_verification.py"
