@@ -13,11 +13,13 @@ runs:
         uses: docker/setup-buildx-action@v3
         
       - name: Build Docker image
+        shell: bash
         run: |
           cd ./downloaded-reports/$INSTANCE_DIR
           docker build -t verification:latest .
           
       - name: Run script in container with mounted reports
+        shell: bash
         run: |
           # 确保目录存在
           ls -la ./downloaded-reports/$INSTANCE_DIR 
