@@ -25,7 +25,6 @@ def merge_json_files():
         json.dump(pygithub_data, f, indent=4, ensure_ascii=False)
 
     #print("字段已成功追加到INSTANCE_DIR.json文件中".encode('utf-8').decode('utf-8'))
-	print("write success!")
 
 
 if __name__ == "__main__":
