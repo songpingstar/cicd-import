@@ -61,25 +61,25 @@ runs:
         echo "开始安装pixi工具====================="
         curl -fsSL https://pixi.sh/install.sh | bash
         source ~/.bashrc
-        pixi --version
+        # pixi --version
         
         echo "开始执行setup_env 脚本========================="
         bash setup_env.sh
        
-        echo "pytest版本是："
-        pixi run pytest --version 
-        echo "pytest路径是："
-        which pytest
+        # echo "pytest版本是："
+        # pixi run pytest --version 
+        # echo "pytest路径是："
+        # which pytest
         
         echo "开始写入pytest.sh 脚本====================="
         cat > pytest.sh << EOF
         #!/bin/bash
         cd /testbed/$REPO_DIR
-        pytest $TEST_FILE
+        pixi run pytest $TEST_FILE
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
-        pytest $TEST_FILE || true
+        pixi run pytest $TEST_FILE || true
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/code.patch 
-        pytest $TEST_FILE
+        pixi run pytest $TEST_FILE
         EOF
         
         echo "开始执行pytest.sh 脚本====================="

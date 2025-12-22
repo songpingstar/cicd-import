@@ -57,18 +57,25 @@ jobs:
         cat > setup_env.sh << EOF
         #!/bin/bash
         cd /testbed/$REPO_DIR
-        ###############################################
+        ##################pixi###########################
         pip install -q --upgrade pip setuptools
         pixi run make check-prereqs
         pixi run make fe
         pixi run make py
         ###############################################
+        
+        ##################uv###########################
+        # pip install -q --upgrade pip setuptools
+        # pip install -q uv
+        ###############################################
+        
+        ##################pip###########################
+        #pip install -q --upgrade pip setuptools
         #pip install -e .
-        #pip install -q -r requirements/test.txt
-        #pip install -q -r requirements/types.txt
         #pip install -q -r test-requirements.txt
         #pip install -q --upgrade pytest
         #pip install -v pytest==8.4.2
+        ###############################################
         EOF
 
     - name: Execute pytest steps
