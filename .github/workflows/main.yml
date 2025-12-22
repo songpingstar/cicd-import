@@ -85,12 +85,12 @@ jobs:
         cat > pytest.sh << EOF
         #!/bin/bash
         cd /testbed/$REPO_DIR
-        hatch env create test
-        hatch run test:test $TEST_FILE
+        hatch env create test --python 3.12
+        hatch run +py=3.12 test:test $TEST_FILE
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
-        hatch run test:test $TEST_FILE || true
+        hatch run +py=3.12 test:test $TEST_FILE || true
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/code.patch 
-        hatch run test:test $TEST_FILE
+        hatch run +py=3.12 test:test $TEST_FILE
         EOF
       
       
