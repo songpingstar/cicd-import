@@ -5,18 +5,13 @@ on:
     branches: [main]
 
 env:
-  # INSTANCE_DIR: "marimo-team__marimo-6887"
-  # REPO_DIR: marimo
-  # base_commit: 12b174df72d8731ee62f6c90d108711db5719ebf
-  # REPO_URL: https://github.com/marimo-team/marimo.git
-  #CONDA_DIR: /opt/miniconda3
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
   PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: tests/_runtime/packages/test_package_managers.py
   RUN_PYTEST: 'false'
-  BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%8F%91%E5%B8%83%E7%9A%84-12.3/google__pytype/google__pytype-1611.zip?Expires=1767238541&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=6hIfoTLwYEq0JcC4CaZ9IyVao5I%3D'
+  BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%8F%91%E5%B8%83%E7%9A%84-12.15/marimo-team__marimo/marimo-team__marimo-6827.zip?Expires=1767249473&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=2K9utP8exxv0np3Eu4C2zjB%2BQhs%3D'
 
 jobs:
       
@@ -71,19 +66,34 @@ jobs:
         
         ##################hatch###########################
         # pip install -q --upgrade pip setuptools
-        # pip install -q uv
+        pip install hatch
         ###############################################
         
         ##################pip###########################
-        git submodule sync
-        git submodule update --init --recursive --checkout
-        pip install -q --upgrade pip setuptools
-        pip install -e .
-        pip install -r requirements.txt
-        pip install -q --upgrade pytest
+        # git submodule sync
+        # git submodule update --init --recursive --checkout
+        # pip install -q --upgrade pip setuptools
+        # pip install -e .
+        # pip install -r requirements.txt
+        # pip install -q --upgrade pytest
         ###############################################
         EOF
-
+        
+    - name: write pytest.sh
+      run: |
+        echo "开始写入pytest.sh 脚本====================="
+        cat > pytest.sh << EOF
+        #!/bin/bash
+        cd /testbed/$REPO_DIR
+        hatch env create test
+        hatch run test:test $TEST_FILE
+        git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
+        hatch run test:test $TEST_FILE || true
+        git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/code.patch 
+        hatch run test:test $TEST_FILE
+        EOF
+      
+      
     - name: Execute pytest steps
       uses: ./.github/actions/pytest
             
@@ -101,8 +111,6 @@ jobs:
         INSTANCE_DIR=$(echo "$BASE_URL" | sed -n 's/.*\/\([^\/?]*\)\.zip.*/\1/p')
         echo "Extracted using sed: $INSTANCE_DIR"
         echo "INSTANCE_DIR=$INSTANCE_DIR" >> $GITHUB_ENV
-        
-
-        
+            
     - name: Execute docker-verification steps
       uses: ./.github/actions/docker-verification

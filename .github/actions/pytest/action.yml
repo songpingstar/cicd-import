@@ -7,13 +7,6 @@ runs:
     - name: Install system dependencies
       shell: bash
       run: |
-        # sudo apt-get update && sudo apt-get install -y --no-install-recommends \
-        # wget \     
-        # git \
-        # ca-certificates \
-        # curl \
-        # vim \
-        # dos2unix 
 
         echo "当前执行用户是====================="
         whoami
@@ -70,17 +63,6 @@ runs:
         # pixi run pytest --version 
         # echo "pytest路径是："
         # which pytest
-        
-        echo "开始写入pytest.sh 脚本====================="
-        cat > pytest.sh << EOF
-        #!/bin/bash
-        cd /testbed/$REPO_DIR
-        pixi run pytest $TEST_FILE
-        git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
-        pixi run pytest $TEST_FILE || true
-        git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/code.patch 
-        pixi run pytest $TEST_FILE
-        EOF
         
         echo "开始执行pytest.sh 脚本====================="
         if [[ "$RUN_PYTEST" == 'true' ]]; then
