@@ -37,7 +37,7 @@ jobs:
       run: |
         whoami
         apt-get update 
-        apt-get install -y --no-install-recommends wget unzip git curl python3 python3-pip python-is-python3
+        apt-get install -y --no-install-recommends wget bzip2 git curl python3 python3-pip python-is-python3
         
         export INSTANCE_NAME=$(echo "$BASE_URL" | grep -oE '[^/?]+\.zip' | sed 's/\.zip$//')
         
