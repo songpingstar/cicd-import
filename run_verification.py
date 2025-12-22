@@ -217,7 +217,8 @@ def run_all_tests_and_get_results(test_files: List[str]) -> Union[dict, None]:
             existing_test_files.append(file_path_str)
 
     # 将动态获取的测试文件列表添加到 command 中
-    command=["pixi", "run", "pytest"] + existing_test_files + [f"--junitxml={str(report_file)}"]
+    #command=["pixi", "run", "pytest"] + existing_test_files + [f"--junitxml={str(report_file)}"]
+	command=["pytest"] + existing_test_files + [f"--junitxml={str(report_file)}"]
 
     # 打印执行的命令
     print(f"{Colors.BLUE}   -> Executing: pytest {' '.join(test_files)}{Colors.ENDC}")
