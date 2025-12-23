@@ -17,7 +17,7 @@ def merge_json_files():
     # 将字段追加到PyGithub数据中
     pygithub_data['FAIL_TO_PASS'] = fail_to_pass
     pygithub_data['PASS_TO_PASS'] = pass_to_pass
-    pygithub_data['language'] = "Python"
+    pygithub_data['language'] = ["Python"]
     pygithub_data['content_category'] = ["通用工具"]
 
     # 写回文件
