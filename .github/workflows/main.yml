@@ -23,7 +23,7 @@ jobs:
         echo "设置环境变量======================================"
         pwd
         ls
-        cd google__pytype-1353
+        # cd google_pytype-1353
         apt update
         apt install python3-docker
         pip install docker
