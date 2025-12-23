@@ -15,7 +15,7 @@ env:
 jobs:          
   call-docker-verification:
     name: docker-verification
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu
     steps:
     
     - name: get setup_env
