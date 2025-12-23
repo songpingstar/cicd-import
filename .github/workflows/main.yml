@@ -11,7 +11,7 @@ env:
   PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: tests/_server/test_asgi.py
   RUN_PYTEST: 'fasle'
-  BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%8F%91%E5%B8%83%E7%9A%84-12.15/marimo-team__marimo/marimo-team__marimo-7207.zip?Expires=1767317686&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=n1F8WDIdn44%2FtFgcA1Xyh6NyIcE%3D'
+  BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%8F%91%E5%B8%83%E7%9A%84-12.15/marimo-team__marimo/marimo-team__marimo-7197.zip?Expires=1767318411&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=XhpZFZ546L82D%2FmZ0cw9tZlS8yw%3D'
 jobs:
       
   pytest-verification:
