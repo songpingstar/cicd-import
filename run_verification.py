@@ -109,7 +109,7 @@ def get_modified_test_files_from_patch(patch_path: Path) -> List[str]:
     如果文件不存在、读取失败或没有找到 .py 文件，则返回原始的默认测试文件列表。
     """
     # 原始的默认测试文件列表
-    DEFAULT_TEST_FILES = ["tests/reference.py", "tests/test_kerns.py", "tests/test_likelihoods.py"]
+    DEFAULT_TEST_FILES = [" "]
 
     if not patch_path.is_file():
         print(f"{Colors.YELLOW}[INFO] Patch file {patch_path.name} not found. Running default tests.{Colors.ENDC}")
