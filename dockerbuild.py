@@ -10,8 +10,8 @@ TASKS_DIR = Path(r"downloaded-reports")
 IMAGE_NAME_TEMPLATE = "swebench/sweb.eval.x86_64.INSTANCE_DIR"
 
 # 构建选项
-FORCE_REBUILD = True  # 是否强制重新构建已存在的镜像
-SKIP_EXISTING = False   # 是否跳过已存在的镜像
+FORCE_REBUILD = False  # 是否强制重新构建已存在的镜像
+SKIP_EXISTING = True   # 是否跳过已存在的镜像
 EXIT_ON_FAILURE = True # 如果为 True，构建失败时立即终止程序
 
 
