@@ -17,9 +17,12 @@ runs:
             pip --version 
             docker --version
             pip install docker
+            INSTANCE_DIR_LOWER=$(echo "$INSTANCE_DIR" | tr '[:upper:]' '[:lower:]')
             echo "构建镜像======================================"
-            sed -i "s|INSTANCE_DIR|$INSTANCE_DIR|g" dockerbuild.py
+            #sed -i "s|INSTANCE_DIR|$INSTANCE_DIR|g" dockerbuild.py
+            sed -i "/^IMAGE_NAME_TEMPLATE/s|$INSTANCE_DIR|$INSTANCE_DIR_LOWER|g" dockerbuild.py
             python dockerbuild.py
             echo "验证镜像======================================"
-            sed -i "s|INSTANCE_DIR|$INSTANCE_DIR|g" verification.py
+            #sed -i "s|INSTANCE_DIR|$INSTANCE_DIR|g" verification.py
+            sed -i "/^IMAGE_NAME_TEMPLATE/s|$INSTANCE_DIR|$INSTANCE_DIR_LOWER|g" dockerbuild.py
             python verification.py
