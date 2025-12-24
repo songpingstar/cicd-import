@@ -10,6 +10,7 @@ runs:
           path: ./downloaded-reports  # 下载到这个目录
           
       - name: get setup_env
+        shell: bash
         run: |
             echo "查看文件是否存在======================================"
             ls
