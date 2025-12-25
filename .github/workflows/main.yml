@@ -81,7 +81,10 @@ jobs:
         ###############################################
         
         ##################poetry###########################
+        apt-get update
+        apt-get install -y build-essential
         pip install poetry
+        pip install "setuptools<58"
         poetry install
         poetry add django==3.2
         ###############################################
