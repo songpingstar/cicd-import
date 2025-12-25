@@ -6,13 +6,13 @@ on:
 
 env:
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
-  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
-  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py310_25.9.1-3-Linux-x86_64.sh
+  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
+  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py310_25.9.1-3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: marimo/_smoke_tests/pandas/dates.py
   RUN_PYTEST: 'fasle'
-  BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.3/aeon-toolkit__aeon/aeon-toolkit__aeon-1003.zip?Expires=1767513819&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=v3ACdaM1NlXEwnSKikZPffWPKZE%3D'
+  BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.21/strawberry-graphql__strawberry/strawberry-graphql__strawberry-979.zip?Expires=1767517780&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=fhf8sl71La8UXicm3hGVCSCs%2Bvg%3D'
 
 jobs:  
   pytest-verification:
@@ -80,12 +80,17 @@ jobs:
         # cp frontend/public/favicon.ico marimo/_static/favicon.ico
         ###############################################
         
+        ##################poetry###########################
+        pip install poetry
+        poetry install
+        poetry add django==3.2
+        ###############################################
+        
         ##################pip###########################
         # pip install -q --upgrade pip setuptools
         # pip install -e .
         # pip install -r requirements.txt
         # pip install -q --upgrade pytest
-        python -m pip install .[dev]
         ###############################################
         EOF
         
