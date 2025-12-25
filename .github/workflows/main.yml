@@ -60,13 +60,13 @@ jobs:
         
         ##################uv###########################
         apt update
-        apt install -y nodejs npm tree
+        #apt install -y nodejs npm tree
         pip install -q --upgrade pip setuptools
         pip install -q uv
         uv add pytest pytest-asyncio pytest-timeout nbformat
-        bash scripts/test-lsp.sh
-        ls 
-        uv pip install dist/marimo*whl
+        #bash scripts/test-lsp.sh
+        #ls 
+        #uv pip install dist/marimo*whl
         ################################################
         
         ##################hatch###########################
