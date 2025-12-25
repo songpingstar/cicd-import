@@ -59,18 +59,22 @@ jobs:
         ###############################################
         
         ##################uv###########################
-        # pip install -q --upgrade pip setuptools
-        # pip install -q uv
+        pip install -q --upgrade pip setuptools
+        pip install -q uv
+        uv add pytest pytest-asyncio pytest-timeout nbformat
+        bash scripts/test-lsp.sh
+        ls 
+        uv pip install dist/marimo*whl
         ################################################
         
         ##################hatch###########################
-        pip install -q --upgrade pip setuptools
-        pip install hatch
-        hatch version
-        hatch run +py=3.12 test:python --version
-        mkdir -p marimo/_static/assets
-        cp frontend/index.html marimo/_static/index.html
-        cp frontend/public/favicon.ico marimo/_static/favicon.ico
+        # pip install -q --upgrade pip setuptools
+        # pip install hatch
+        # hatch version
+        # hatch run +py=3.12 test:python --version
+        # mkdir -p marimo/_static/assets
+        # cp frontend/index.html marimo/_static/index.html
+        # cp frontend/public/favicon.ico marimo/_static/favicon.ico
         ###############################################
         
         ##################pip###########################
