@@ -11,7 +11,7 @@ env:
   PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: marimo/_smoke_tests/pandas/dates.py
   RUN_PYTEST: 'fasle'
-  BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%8F%91%E5%B8%83%E7%9A%84-12.15/marimo-team__marimo/marimo-team__marimo-7009.zip?Expires=1767492868&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=GP%2FbsSjnqGv5wxQuAQoIk2fkAb0%3D'
+  BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%8F%91%E5%B8%83%E7%9A%84-12.15/marimo-team__marimo/marimo-team__marimo-7002.zip?Expires=1767493191&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=M60Szejtz4%2FLM2M8Ehppk3%2FReco%3D'
 jobs:
       
   pytest-verification:
