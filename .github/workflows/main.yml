@@ -59,6 +59,8 @@ jobs:
         ###############################################
         
         ##################uv###########################
+        apt update
+        apt install tree node
         pip install -q --upgrade pip setuptools
         pip install -q uv
         uv add pytest pytest-asyncio pytest-timeout nbformat
