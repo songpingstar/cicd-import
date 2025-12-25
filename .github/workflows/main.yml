@@ -67,7 +67,7 @@ jobs:
         pip install -q --upgrade pip setuptools
         pip install hatch
         hatch version
-        hatch env create test
+        hatch env create test --python 3.9
         mkdir -p marimo/_static/assets
         cp frontend/index.html marimo/_static/index.html
         cp frontend/public/favicon.ico marimo/_static/favicon.ico
