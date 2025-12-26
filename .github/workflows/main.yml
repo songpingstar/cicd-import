@@ -51,6 +51,12 @@ jobs:
         echo "开始写入setup_env 文件====================="
         cat > setup_env.sh << EOF
         #!/bin/bash
+        echo "python版本是："
+        python --version
+        echo "pip执行路径是："
+        which pip
+        echo "PATH路径是："
+        echo $PATH
         cd /testbed/$REPO_DIR
         ##################pixi###########################
         # pip install -q --upgrade pip setuptools
