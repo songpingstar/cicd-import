@@ -94,7 +94,7 @@ jobs:
         poetry run pip install "setuptools<58.0.0" 
         poetry run pip install pystache==0.5.4
         poetry add opentelemetry-sdk@">=0.13b0,<0.14" --allow-prereleases
-        poetry install --with dev 
+        poetry install 
         ###############################################
         
         ##################pip###########################
