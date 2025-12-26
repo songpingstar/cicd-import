@@ -84,8 +84,8 @@ jobs:
         apt-get update
         apt-get install -y build-essential
         pip install poetry
-        poetry config virtualenvs.path "/root/.pypoetry/virtualenvs"
-        poetry lock --no-update
+        poetry run pip install "setuptools<58.0.0" 
+        poetry run pip install pystache==0.5.4
         poetry install --with dev
         ###############################################
         
