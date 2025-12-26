@@ -12,7 +12,7 @@ env:
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: marimo/_smoke_tests/pandas/dates.py
   RUN_PYTEST: 'fasle'
-  BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.21/strawberry-graphql__strawberry/strawberry-graphql__strawberry-887.zip?Expires=1767578667&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=AOoz9sEOi%2FeKxDW73VrjqVc%2FtKo%3D'
+  BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.21/strawberry-graphql__strawberry/strawberry-graphql__strawberry-858.zip?Expires=1767579031&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=Z2SagEOR0T11ulZ79JxjzglJGKs%3D'
 
 jobs:  
   pytest-verification:
