@@ -81,12 +81,12 @@ jobs:
         ###############################################
         
         ##################poetry###########################
-        apt-get update
-        apt-get install -y build-essential
-        pip install "setuptools<58"
+        # apt-get update
+        # apt-get install -y build-essential
         pip install poetry
-        poetry install
-        poetry add django==3.2
+        poetry config virtualenvs.path "/root/.pypoetry/virtualenvs"
+        poetry lock --no-update
+        poetry install --with dev
         ###############################################
         
         ##################pip###########################
