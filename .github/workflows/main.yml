@@ -11,8 +11,8 @@ env:
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py310_25.9.1-3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
-  TEST_FILE: lib/spack/spack/test/environment_modifications.py
-  RUN_PYTEST: 'false'
+  TEST_FILE: lib/spack/spack/test/concretize.py
+  RUN_PYTEST: 'true'
   BASE_URL: 'https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.22/spack__spack/spack__spack-13513.zip?Expires=1767853334&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=lX834YKvXrYxUFSeNy5Jj6OQZ60%3D'
   
   
