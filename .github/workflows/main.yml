@@ -101,10 +101,12 @@ jobs:
         ###############################################
         
         ##################pip###########################
+        export PYTHONPATH=/testbed/spack/lib/spack:/testbed/spack/lib/spack/external
         pip install -q --upgrade pip setuptools six codecov flake8 pep8-naming 
+        pip install -q pytest==6.2.5
         # pip install -e .
         # pip install -r requirements.txt
-        pip install -q --upgrade pytest
+        # pip install -q --upgrade pytest
         ###############################################
         EOF
         
