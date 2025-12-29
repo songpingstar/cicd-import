@@ -25,3 +25,11 @@ runs:
             echo "验证镜像======================================"
             sed -i "/^IMAGE_NAME_TEMPLATE/s|INSTANCE_DIR|$INSTANCE_DIR_LOWER|g" verification.py
             python verification.py
+            
+      - name: mergejson
+        shell: bash
+        run: |
+            sed -i "s|INSTANCE_DIR|$INSTANCE_DIR|g" mergejson.py
+            echo "开始执行mergejson.py 合并程序====================="
+            cp $INSTANCE_DIR/$INSTANCE_DIR.json $GITHUB_WORKSPACE/
+            python mergejson.py
