@@ -32,5 +32,5 @@ runs:
             sed -i "s|INSTANCE_DIR|$INSTANCE_DIR|g" mergejson.py
             echo "开始执行mergejson.py 合并程序====================="
             cp downloaded-reports/$INSTANCE_DIR.json $GITHUB_WORKSPACE/
-            cp downloaded-reports/results.json $GITHUB_WORKSPACE/
+            cp downloaded-reports/result.json $GITHUB_WORKSPACE/results.json
             python mergejson.py
