@@ -101,7 +101,7 @@ jobs:
         ###############################################
         
         ##################pip###########################
-        pip install -q --upgrade pip setuptools six codecov flake8 pep8-naming
+        pip install -q --upgrade pip setuptools six codecov flake8 pep8-naming ordereddict_backport
         # pip install -e .
         # pip install -r requirements.txt
         pip install -q --upgrade pytest
