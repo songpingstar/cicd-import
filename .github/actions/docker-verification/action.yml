@@ -13,7 +13,7 @@ runs:
         shell: bash
         run: |
             echo "查看文件是否存在======================================"
-            ls
+            ls downloaded-reports
             python --version
             pip --version 
             docker --version
@@ -31,5 +31,5 @@ runs:
         run: |
             sed -i "s|INSTANCE_DIR|$INSTANCE_DIR|g" mergejson.py
             echo "开始执行mergejson.py 合并程序====================="
-            cp $INSTANCE_DIR/$INSTANCE_DIR.json $GITHUB_WORKSPACE/
+            cp downloaded-reports/$INSTANCE_DIR.json $GITHUB_WORKSPACE/
             python mergejson.py
