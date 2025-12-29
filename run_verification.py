@@ -220,7 +220,7 @@ def run_all_tests_and_get_results(test_files: List[str]) -> Union[dict, None]:
     #command=["hatch", "run", "+py=3.12", "test:test"] + existing_test_files + [f"--junitxml={str(report_file)}"]
     #command=["uv", "run", "--no-project", "pytest"] + existing_test_files + [f"--junitxml={str(report_file)}"]
     #command=["poetry", "run", "pytest"] + existing_test_files + [f"--junitxml={str(report_file)}"]
-    command=["pytest"] + existing_test_files + [f"--junitxml={str(report_file)}"]
+    command=["python", "-m", "pytest"] + existing_test_files + [f"--junitxml={str(report_file)}"]
     # 打印执行的命令
     print(f"{Colors.BLUE}   -> Executing: pytest {' '.join(test_files)}{Colors.ENDC}")
 
