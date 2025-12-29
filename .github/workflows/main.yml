@@ -118,13 +118,13 @@ jobs:
         export PYTHONPATH=/testbed/spack/lib/spack:/testbed/spack/lib/spack/external
         cd /testbed/$REPO_DIR
         echo "查看有多少测试用例"
-        pytest $TEST_FILE --collect-only
+        python -m pytest $TEST_FILE --collect-only
         echo "打上test.patch后测试"
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
-        pytest $TEST_FILE || true
+        python -m pytest $TEST_FILE || true
         echo "打上code.patch和test.patch后测试"
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/code.patch 
-        pytest $TEST_FILE
+        python -m pytest $TEST_FILE
         EOF
       
       
