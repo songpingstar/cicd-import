@@ -118,6 +118,8 @@ jobs:
         cd /testbed/$REPO_DIR
         echo "查看有多少测试用例"
         python -m pytest $TEST_FILE --collect-only
+        echo "不打patch直接pytest"
+        python -m pytest $TEST_FILE 
         echo "打上test.patch后测试"
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
         python -m pytest $TEST_FILE || true
