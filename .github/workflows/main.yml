@@ -13,7 +13,7 @@ env:
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: lib/spack/spack/test/url_fetch.py
   RUN_PYTEST: 'false'
-  BASE_URL: 
+  BASE_URL: " "
   
   
   
