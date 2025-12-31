@@ -98,7 +98,6 @@ runs:
         EOF
         
         echo "开始执行run_verification.sh 脚本====================="
-        export PYTHONPATH=/testbed/spack/lib/spack:/testbed/spack/lib/spack/external
         bash run_verification.sh
         
         cp /testbed/results.json $GITHUB_WORKSPACE/

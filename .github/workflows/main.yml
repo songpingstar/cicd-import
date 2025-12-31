@@ -6,15 +6,14 @@ on:
 
 env:
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
-  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py37_4.10.3-Linux-x86_64.sh
-  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
+  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py37_4.10.3-Linux-x86_64.sh
+  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py310_25.9.1-3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
-  TEST_FILE: lib/spack/spack/test/spec_semantics.py
-  RUN_PYTEST: 'false'
-  BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.22/spack__spack/spack__spack-14372.zip?Expires=1767944833&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=jAGb8iUmud8iN4WckcHgi8hGEjg%3D"
-  
+  TEST_FILE: keras/layers/regularization/alpha_dropout_test.py
+  RUN_PYTEST: 'true'
+  BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84/keras-team__keras/keras-team__keras-19459.zip?Expires=1768009541&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=uPz8SpvNI1SM%2BVminvfu1mj0t2o%3D"
   
   
   
@@ -111,8 +110,12 @@ jobs:
         ###############################################
         
         ##################pip###########################
-        pip install -q --upgrade pip setuptools six codecov flake8 pep8-naming 
-        pip install pytest==6.2.5
+        pip install -q --upgrade pip setuptools
+        pip install -r requirements.txt --progress-bar off --upgrade
+        pip uninstall -y keras keras-nightly
+        pip install tf_keras==2.16.0rc0 --progress-bar off --upgrade
+        pip install -e "." --progress-bar off --upgrade
+        # pip install pytest==6.2.5
         # pip install -e .
         # pip install -r requirements.txt
         # pip install -q --upgrade pytest
@@ -124,7 +127,6 @@ jobs:
         echo "开始写入pytest.sh 脚本====================="
         cat > pytest.sh << EOF
         #!/bin/bash
-        export PYTHONPATH=/testbed/spack/lib/spack:/testbed/spack/lib/spack/external
         cd /testbed/$REPO_DIR
         echo "查看有多少测试用例"
         python -m pytest $TEST_FILE --collect-only

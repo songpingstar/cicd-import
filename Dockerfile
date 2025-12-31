@@ -29,7 +29,6 @@ RUN wget 'MinicondaURL' -O miniconda.sh && \
 
 # 将Miniconda的可执行文件目录添加到系统PATH
 ENV PATH=/opt/miniconda3/bin:${PATH}
-ENV PYTHONPATH=/testbed/spack/lib/spack:/testbed/spack/lib/spack/external
 
 # 初始化Conda，使其能够在shell脚本中被调用，并配置conda-forge渠道
 RUN conda init bash && conda config --add channels conda-forge && conda config --remove channels defaults
