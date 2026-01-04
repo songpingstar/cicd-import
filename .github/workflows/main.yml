@@ -13,7 +13,7 @@ env:
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: keras/layers/regularization/alpha_dropout_test.py
   RUN_PYTEST: 'false'
-  BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84/keras-team__keras/keras-team__keras-20457.zip?Expires=1768356576&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=sRHzkhLczURlVMTKVnG7cPndh20%3D"
+  BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84/keras-team__keras/keras-team__keras-20389.zip?Expires=1768356571&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=OF2Og%2F6uN%2FuAi7RgFtXzhrT03iY%3D"
   
   
   
