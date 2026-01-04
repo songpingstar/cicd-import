@@ -12,7 +12,7 @@ env:
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: tests/test_auto_parallel/test_tensor_shard/test_node_handler/test_reshape_handler.py
-  RUN_PYTEST: 'true'
+  RUN_PYTEST: 'false'
   BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.22/spack__spack/spack__spack-13022.zip?Expires=1768381061&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=6u2Dk8rm3ArIxfqgFlVbgc%2FujfI%3D"
   
   
