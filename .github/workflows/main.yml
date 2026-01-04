@@ -107,7 +107,7 @@ jobs:
         
         ##################pip###########################
         #pip install -q --upgrade pip setuptools
-        CUDA_EXT=1 pip install -v -e .
+        #CUDA_EXT=1 pip install -v -e .
         pip install -r requirements/requirements-test.txt
         # pip install pytest==6.2.5
         # pip install -e .
