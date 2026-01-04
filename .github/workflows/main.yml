@@ -56,6 +56,9 @@ jobs:
 
     - name: write setup_env
       run: |
+        echo "开始写入setup_env 文件====================="
+        cat > setup_env.sh << EOF
+        #!/bin/bash
         cd /testbed/$REPO_DIR
         ##################pixi###########################
         # pip install -q --upgrade pip setuptools
