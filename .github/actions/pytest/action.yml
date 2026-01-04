@@ -57,6 +57,7 @@ runs:
         # pixi --version
         
         echo "开始执行setup_env 脚本========================="
+        export PYTHONPATH=/testbed/spack/lib/spack:/testbed/spack/lib/spack/external
         bash setup_env.sh
        
         # echo "pytest版本是："
