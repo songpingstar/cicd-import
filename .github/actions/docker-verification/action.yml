@@ -8,7 +8,7 @@ runs:
         shell: bash
         run: |
             echo "解压文件======================================"
-            unzip ${INSTANCE_DIR}.zip -d downloaded-reports
+            unzip zipfile/${INSTANCE_DIR}.zip -d downloaded-reports
             echo "查看文件是否存在======================================"
             ls downloaded-reports
             python --version
