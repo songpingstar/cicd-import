@@ -3,15 +3,12 @@ name: pytest verification
 runs:
   using: "composite"
   steps:
-      - name: Download artifact from verification
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.INSTANCE_DIR }}  # 必须和 upload 时的 name 一致
-          path: ./downloaded-reports  # 下载到这个目录
-          
+
       - name: get setup_env
         shell: bash
         run: |
+            echo "解压文件======================================"
+            unzip ${INSTANCE_DIR}.zip -d downloaded-reports
             echo "查看文件是否存在======================================"
             ls downloaded-reports
             python --version
@@ -26,11 +23,3 @@ runs:
             sed -i "/^IMAGE_NAME_TEMPLATE/s|INSTANCE_DIR|$INSTANCE_DIR_LOWER|g" verification.py
             python verification.py
             
-      - name: mergejson
-        shell: bash
-        run: |
-            sed -i "s|INSTANCE_DIR|$INSTANCE_DIR|g" mergejson.py
-            echo "开始执行mergejson.py 合并程序====================="
-            cp downloaded-reports/$INSTANCE_DIR.json $GITHUB_WORKSPACE/
-            cp downloaded-reports/result.json $GITHUB_WORKSPACE/results.json
-            python mergejson.py
