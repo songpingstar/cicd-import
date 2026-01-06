@@ -12,8 +12,13 @@ env:
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: tests/test_auto_parallel/test_tensor_shard/test_node_handler/test_getitem_handler.py
-  RUN_PYTEST: 'true'
-  BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.3/hpcaitech__ColossalAI/hpcaitech__ColossalAI-2615.zip?Expires=1768468635&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=wR3q2PsX8L%2FkYzxMd3MPAGl9Gfk%3D"
+  RUN_PYTEST: 'false'
+  BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.3/hpcaitech__ColossalAI/hpcaitech__ColossalAI-2796.zip?Expires=1768533633&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=NDRzfwfQtzpbLbQ08sbcM8KQX0w%3D"
+  
+  
+  
+  
+  
   
 jobs:  
   pytest-verification:
