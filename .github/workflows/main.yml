@@ -92,12 +92,12 @@ jobs:
         ###############################################
         
         ##################pip###########################
-        pip install torch numpy
-        pip install -r requirements/requirements-test.txt
+        pip install torch 
+        pip install -r requirements/requirements.txt
         # pip install pytest==6.2.5
         # pip install -e .
         # pip install -r requirements.txt
-        # pip install -q --upgrade pytest
+        pip install -q --upgrade pytest
         ###############################################
         EOF
         
