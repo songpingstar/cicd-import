@@ -97,7 +97,9 @@ jobs:
         ##################pip###########################
         apt-get update
         apt-get install -y build-essential gcc
-        python setup.py develop
+        pip install "pip<19" "setuptools<60"
+        pip install -e .
+        # python setup.py develop
         # pip install -r requirements.txt
         # pip install -q --upgrade pytest
         ###############################################
