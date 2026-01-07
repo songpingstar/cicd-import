@@ -95,11 +95,8 @@ jobs:
         ###############################################
         
         ##################pip###########################
-        # apt-get update
-        # apt-get install -y build-essential gcc
-        # pip install "pip<19" "setuptools<60"
-        # pip install -e .
-        # pip install -r requirements.txt
+        apt-get update
+        apt-get install -y build-essential gcc
         pip install spacy torch numpy
         pip install -q --upgrade pytest
         ###############################################
