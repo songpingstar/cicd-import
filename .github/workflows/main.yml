@@ -95,8 +95,7 @@ jobs:
         ###############################################
         
         ##################pip###########################
-        pip install "pip<23" "setuptools<60"
-        pip install -e . --no-use-pep517
+        python setup.py develop
         # pip install -r requirements.txt
         # pip install -q --upgrade pytest
         ###############################################
