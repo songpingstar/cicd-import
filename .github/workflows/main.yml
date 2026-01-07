@@ -95,9 +95,7 @@ jobs:
         ###############################################
         
         ##################pip###########################
-        pip install -r dev-requirements.txt
-        pip install pytest==6.2.5
-        # pip install -e .
+        pip install -e .
         # pip install -r requirements.txt
         # pip install -q --upgrade pytest
         ###############################################
