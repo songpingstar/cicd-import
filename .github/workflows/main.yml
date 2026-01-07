@@ -98,6 +98,8 @@ jobs:
         apt-get update
         apt-get install -y build-essential gcc
         pip install "pip<19" "setuptools<60"
+        pip uninstall packaging
+        pip install "packaging<20"
         pip install -e .
         # python setup.py develop
         # pip install -r requirements.txt
