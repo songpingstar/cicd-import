@@ -13,7 +13,7 @@ env:
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: tests/test_autochunk/test_autochunk_diffuser/test_autochunk_diffuser_utils.py
   RUN_PYTEST: 'false'
-  BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.3/hpcaitech__ColossalAI/hpcaitech__ColossalAI-2946.zip?Expires=1768620541&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=oafz5mTI8GONzwcyj8vogD4ts6M%3D"
+  BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.3/hpcaitech__ColossalAI/hpcaitech__ColossalAI-2912.zip?Expires=1768620531&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=jhtiyjjSVJ1KE4J01nzG%2Fd5X35E%3D"
   
   
   
