@@ -11,10 +11,9 @@ env:
   PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py310_25.9.1-3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
-  TEST_FILE: tests/test_auto_parallel/test_tensor_shard/test_node_handler/test_getitem_handler.py
-  RUN_PYTEST: 'false'
+  TEST_FILE: tests/test_autochunk/test_autochunk_diffuser/test_autochunk_diffuser_utils.py
+  RUN_PYTEST: 'true'
   BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.3/hpcaitech__ColossalAI/hpcaitech__ColossalAI-2621.zip?Expires=1768533913&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=RzLFwBmzgb%2F9nEznchW%2FT3hZpBI%3D"
-  
   
   
   
@@ -112,14 +111,14 @@ jobs:
         cat > pytest.sh << EOF
         #!/bin/bash
         cd /testbed/$REPO_DIR
-        echo "查看有多少测试用例"
+        echo "查看有多少测试用例============================"
         python -m pytest $TEST_FILE --collect-only
-        echo "不打patch直接pytest"
+        echo "不打patch直接pytest============================="
         python -m pytest $TEST_FILE       
-        echo "打上test.patch后测试"
+        echo "打上test.patch后测试============================="
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/test.patch 
         python -m pytest $TEST_FILE || true
-        echo "打上code.patch和test.patch后测试"
+        echo "打上code.patch和test.patch后测试===================="
         git apply $GITHUB_WORKSPACE/$INSTANCE_DIR/code.patch 
         python -m pytest $TEST_FILE
         EOF
