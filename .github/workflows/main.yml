@@ -101,11 +101,11 @@ jobs:
         # pip uninstall packaging
         # pip install "packaging<20"
         # pip install -e .
-        pip install "setuptools<61"
-        pip install "matplotlib<3.6" "numpy<1.22" "torch<2" "spacy<3" "scipy<1.8" "scikit-learn<1.1" Cython pkgconfig
-        python setup.py develop
+        # pip install "setuptools<61"
+        # pip install "matplotlib<3.6" "numpy<1.22" "torch<2" "spacy<3" "scipy<1.8" "scikit-learn<1.1" Cython pkgconfig
+        # python setup.py develop
         # pip install -r requirements.txt
-        # pip install -q --upgrade pytest
+        pip install -q --upgrade pytest
         ###############################################
         EOF
         
