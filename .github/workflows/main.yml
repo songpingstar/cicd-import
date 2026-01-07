@@ -6,15 +6,14 @@ on:
 
 env:
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
-  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py37_4.10.3-Linux-x86_64.sh
+  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py37_4.10.3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
-  PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py310_25.9.1-3-Linux-x86_64.sh
+  #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py310_25.9.1-3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py311_25.9.1-3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
-  TEST_FILE: tests/test_autochunk/test_autochunk_diffuser/test_autochunk_diffuser_utils.py
-  RUN_PYTEST: 'false'
-  BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.3/hpcaitech__ColossalAI/hpcaitech__ColossalAI-2717.zip?Expires=1768620504&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=L4XDluQJUafguUzoKxDqM%2BOevNk%3D"
-  
+  TEST_FILE: allennlp/tests/commands/predict_test.py
+  RUN_PYTEST: 'true'
+  BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.15/allenai__allennlp/allenai__allennlp-3593.zip?Expires=1768621238&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=6OtEszAsI%2F1CXPs2FNpyZnNhIvw%3D"
   
   
   
@@ -96,8 +95,7 @@ jobs:
         ###############################################
         
         ##################pip###########################
-        pip install torch==1.13.1
-        pip install -r requirements/requirements.txt
+        pip install -r dev-requirements.txt
         pip install pytest==6.2.5
         # pip install -e .
         # pip install -r requirements.txt
