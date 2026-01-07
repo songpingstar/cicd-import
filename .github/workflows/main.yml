@@ -101,7 +101,7 @@ jobs:
         # pip uninstall packaging
         # pip install "packaging<20"
         # pip install -e .
-        
+        pip install "matplotlib<3.6"
         python setup.py develop
         # pip install -r requirements.txt
         # pip install -q --upgrade pytest
