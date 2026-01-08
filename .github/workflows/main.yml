@@ -5,7 +5,7 @@ on:
     branches: [zhijian]
 
 env:
-  INSTANCE_DIR: spack__spack-14757
+  INSTANCE_DIR: spack__spack-15452
  
   
 jobs:  
