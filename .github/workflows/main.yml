@@ -96,7 +96,7 @@ jobs:
         
         ##################pip############################
         apt-get update
-        apt-get install -y gcc cmake
+        apt-get install -y build-essential
         mv pyproject.toml pyproject.toml.bak
         #pip install -q --upgrade pip setuptools
         pip install --upgrade pip==20.3.4 setuptools==57.5.0 wheel==0.37.0
