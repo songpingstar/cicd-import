@@ -98,7 +98,8 @@ jobs:
         apt-get update
         apt-get install -y gcc cmake
         mv pyproject.toml pyproject.toml.bak
-        pip install -q --upgrade pip setuptools
+        #pip install -q --upgrade pip setuptools
+        pip install --upgrade pip==20.3.4 setuptools==57.5.0 wheel==0.37.0
         pip install transformers==2.11.0  
         pip install .
         # pip install -q --upgrade pytest

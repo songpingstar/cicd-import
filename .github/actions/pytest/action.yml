@@ -27,6 +27,8 @@ runs:
         python --version
         echo "pip执行路径是："
         which pip
+        echo "pip版本是："
+        pip --version
         echo "PATH路径是："
         echo $PATH
          
