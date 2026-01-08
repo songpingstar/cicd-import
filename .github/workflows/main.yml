@@ -100,14 +100,8 @@ jobs:
         echo "当前目录是"
         ls
         mv pyproject.toml pyproject.toml.bak
-        pip install \
-          torch==1.7.1 \
-          transformers==2.11.0 \
-          spacy>=2.1,<2.3 \
-          scikit-learn<0.24 \
-          setuptools<58 \
-          wheel<0.38 \
-          Cython  
+        pip install setuptools<58 wheel<0.38
+        pip install torch==1.7.1 transformers==2.11.0 spacy>=2.1,<2.3 scikit-learn<0.24  Cython  
         pip install .
         # pip install -q --upgrade pip setuptools
         # pip install -q --upgrade pytest
