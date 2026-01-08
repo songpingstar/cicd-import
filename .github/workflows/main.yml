@@ -96,7 +96,7 @@ jobs:
         
         ##################pip############################
         apt-get update
-        apt-get install -y gcc
+        apt-get install -y gcc cmake
         mv pyproject.toml pyproject.toml.bak
         pip install transformers==2.11.0  Cython  
         pip install .
