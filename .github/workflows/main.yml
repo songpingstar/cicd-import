@@ -100,6 +100,7 @@ jobs:
         mv pyproject.toml pyproject.toml.bak
         #pip install -q --upgrade pip setuptools
         pip install --upgrade pip==20.3.4 setuptools==57.5.0 wheel==0.37.0
+        pip install boto3==1.26.10 botocore==1.26.10
         pip install transformers==2.11.0  
         pip install .
         # pip install -q --upgrade pytest
