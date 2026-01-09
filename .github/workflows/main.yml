@@ -152,8 +152,11 @@ jobs:
         ###############################################
         
         ##################pip############################
-        # apt-get update
-        # apt-get install -y build-essential
+        apt-get update
+        apt-get install -y build-essential
+        export PYTHONIOENCODING=utf-8
+        export LANG=C.UTF-8
+        export LC_ALL=C.UTF-8
         sed -i 's/1-unreleased/1.dev0/g' allennlp/version.py
         cp $GITHUB_WORKSPACE/requirements.txt .
         pip install torch==1.2.0
