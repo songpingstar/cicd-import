@@ -152,14 +152,12 @@ jobs:
         ###############################################
         
         ##################pip############################
-        apt-get update
-        apt-get install -y build-essential
-        mv pyproject.toml pyproject.toml.bak
-        #pip install -q --upgrade pip setuptools
-        pip install --upgrade pip==20.3.4 setuptools==57.5.0 wheel==0.37.0
-        pip install boto3==1.26.10 botocore==1.26.10
-        pip install transformers==2.11.0  
-        pip install .
+        # apt-get update
+        # apt-get install -y build-essential
+        sed -i 's/1-unreleased/1.dev0/g' allennlp/version.py
+        pip install torch==1.2.0
+        pip install -q --upgrade pip
+        pip install -r requirements.txt
         # pip install -q --upgrade pytest
         ###############################################
         EOF
