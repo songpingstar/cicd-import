@@ -17,12 +17,14 @@ def main():
     repo_full = data.get('repo', '')
     base_commit = data.get('base_commit', '')
     pr_url = data.get('pr_url', '')
-    issue_numbers = data.get('issue_numbers', [])
     # 处理 REPO_DIR：从 "owner/repo" 中提取 "repo"
     repo_dir = repo_full.split('/')[-1] if '/' in repo_full else repo_full
     
     # 处理 REPO_URL：将 PR URL 转换为 Git URL
     if pr_url and '/pull/' in pr_url:
+		    m = re.search(r'/pull/(\d+)', pr_url)
+        if m:
+           pr_numbers = m.group(1)   
         repo_url = re.sub(r'/pull/\d+', '.git', pr_url)
     else:
         repo_url = pr_url
@@ -33,7 +35,7 @@ def main():
         env_file.write(f"REPO_DIR={repo_dir}\n")
         env_file.write(f"base_commit={base_commit}\n")
         env_file.write(f"REPO_URL={repo_url}\n")
-        env_file.write(f"issue_numbers={issue_numbers}\n")
+        env_file.write(f"pr_numbers={pr_numbers}\n")
     
     # 输出调试信息
     print("环境变量设置完成:")
@@ -43,7 +45,7 @@ def main():
     print(f"base_commit: {base_commit}")
     print(f"PR_URL: {pr_url}")
     print(f"REPO_URL: {repo_url}")
-    print(f"issue_numbers: {issue_numbers}")
+    print(f"pr_numbers: {pr_numbers}")
 
 if __name__ == "__main__":
     main()
