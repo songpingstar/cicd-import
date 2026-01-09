@@ -22,7 +22,7 @@ def main():
     
     # 处理 REPO_URL：将 PR URL 转换为 Git URL
     if pr_url and '/pull/' in pr_url:
-		    m = re.search(r'/pull/(\d+)', pr_url)
+        m = re.search(r'/pull/(\d+)', pr_url)
         if m:
            pr_numbers = m.group(1)   
         repo_url = re.sub(r'/pull/\d+', '.git', pr_url)
