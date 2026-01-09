@@ -5,6 +5,7 @@ on:
     branches: [main]
 
 env:
+  TOKEN: ${{ secrets.TOKEN }}
   PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-4.5.1-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py37_4.10.3-Linux-x86_64.sh
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py39_23.1.0-1-Linux-x86_64.sh
@@ -142,6 +143,11 @@ jobs:
         INSTANCE_DIR=$(echo "$BASE_URL" | sed -n 's/.*\/\([^\/?]*\)\.zip.*/\1/p')
         echo "Extracted using sed: $INSTANCE_DIR"
         echo "INSTANCE_DIR=$INSTANCE_DIR" >> $GITHUB_ENV
-            
+      
+    - name: issue verification
+      run: |
+        echo “检查issue是否满足条件===============================”
+        python issue.py
+      
     - name: Execute docker-verification steps
       uses: ./.github/actions/docker-verification
