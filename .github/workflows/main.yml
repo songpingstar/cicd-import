@@ -5,7 +5,7 @@ on:
     branches: [zhijian]
 
 env:
-  INSTANCE_DIR: spack__spack-15452
+  INSTANCE_DIR: google__pytype-1353
  
   
 jobs:  
