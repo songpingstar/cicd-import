@@ -5,7 +5,7 @@ on:
     branches: [zhijian]
 
 env:
-  INSTANCE_DIR: getpelican__pelican-2196
+  INSTANCE_DIR: getpelican__pelican-2818
  
   
 jobs:  
