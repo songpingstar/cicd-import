@@ -14,8 +14,7 @@ env:
   #PY_URL: https://repo.anaconda.com/miniconda/Miniconda3-py312_25.9.1-3-Linux-x86_64.sh
   TEST_FILE: allennlp/tests/commands/predict_test.py
   RUN_PYTEST: 'false'
-  BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.15/allenai__allennlp/allenai__allennlp-3769.zip?Expires=1768810566&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=iYgHQjpeloeLi6iRoMk83VyvUyo%3D"
-  
+  BASE_URL: "https://sh-eng-dataset-zjk.oss-cn-zhangjiakou.aliyuncs.com/shien_files/SWEBench/%E4%BB%BB%E5%8A%A1/%E5%89%A9%E4%B8%8B%E7%9A%84-12.15/allenai__allennlp/allenai__allennlp-3620.zip?Expires=1769153858&OSSAccessKeyId=LTAI5tB2Etp2wUEVtkT7zckM&Signature=3HIL%2BQ78habeH0ejrgw4RkiuORE%3D"
   
 jobs:  
   pytest-verification:
@@ -51,63 +50,6 @@ jobs:
 
     - name: write setup_env
       run: |   
-        echo “重写依赖文件===============================”
-        cat > requirements.txt << EOF
-        # ------------------------
-        # Core
-        # ------------------------
-        #torch==1.2.0
-        #numpy==1.19.5
-        scipy==1.5.4
-        scikit-learn==0.24.2
-        h5py==2.10.0
-        # ------------------------
-        # NLP
-        # ------------------------
-        nltk==3.6.7
-        spacy==2.2.4
-        conllu==1.3.1
-        ftfy==6.0.3
-        # spacy 2.x 依赖
-        thinc==7.4.0
-        blis==0.4.1
-        cymem==2.0.3
-        preshed==3.0.2
-        murmurhash==1.0.2
-        # ------------------------
-        # AllenNLP 相关
-        # ------------------------
-        overrides==2.0
-        tensorboardX==1.8
-        pytorch-pretrained-bert==0.6.2
-        transformers==2.1.1
-        jsonpickle==1.5.2
-        # ------------------------
-        # IO / Utils
-        # ------------------------
-        tqdm==4.64.1
-        requests==2.27.1
-        python-dateutil==2.8.0
-        pytz==2023.3
-        matplotlib==3.3.4
-        # ------------------------
-        # AWS / Remote
-        # ------------------------
-        boto3==1.23.10
-        botocore==1.26.10
-        # ------------------------
-        # jsonnet (Linux / macOS)
-        # ------------------------
-        jsonnet==0.16.0; sys_platform != "win32"
-        # ------------------------
-        # Testing (可选)
-        # ------------------------
-        pytest==6.2.5
-        flaky==3.7.0
-        responses==0.17.0
-        numpydoc==1.1.0
-        EOF
-
         echo "开始写入setup_env 文件====================="
         cat > setup_env.sh << EOF
         #!/bin/bash
@@ -151,16 +93,10 @@ jobs:
         ###############################################
         
         ##################pip############################
-        apt-get update
-        apt-get install -y build-essential
-        export PYTHONIOENCODING=utf-8
-        export LANG=C.UTF-8
-        export LC_ALL=C.UTF-8
-        sed -i 's/1-unreleased/1.dev0/g' allennlp/version.py
-        cp $GITHUB_WORKSPACE/requirements.txt .
-        pip install torch==1.2.0
-        pip install -q --upgrade pip
-        pip install -r requirements.txt
+        pip install -U pip
+        pip install torch==0.4.1 -i https://download.pytorch.org/whl/cpu
+        pip install -r requirements.txt allennlp overrides==3.1.0 scikit-learn==0.19.2 pytest==4.6.11
+        pip install -e .
         # pip install -q --upgrade pytest
         ###############################################
         EOF
