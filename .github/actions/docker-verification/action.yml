@@ -31,3 +31,11 @@ runs:
             cp downloaded-reports/$INSTANCE_DIR.json $GITHUB_WORKSPACE/
             cp downloaded-reports/result.json $GITHUB_WORKSPACE/results.json
             python mergejson.py
+            
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+        name: ${{ env.INSTANCE_DIR }}
+        path: |
+            results.json
