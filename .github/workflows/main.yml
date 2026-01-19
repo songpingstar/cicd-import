@@ -5,7 +5,7 @@ on:
     branches: [zhijian]
 
 env:
-  INSTANCE_DIR: marimo-team__marimo-7249
+  INSTANCE_DIR: strawberry-graphql__strawberry-2503
  
   
 jobs:  
