@@ -5,7 +5,7 @@ on:
     branches: [zhijian]
 
 env:
-  INSTANCE_DIR: marimo-team__marimo-7009
+  INSTANCE_DIR: marimo-team__marimo-7028
  
   
 jobs:  
