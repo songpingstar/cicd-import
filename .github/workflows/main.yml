@@ -5,7 +5,7 @@ on:
     branches: [zhijian]
 
 env:
-  INSTANCE_DIR: strawberry-graphql__strawberry-2503
+  INSTANCE_DIR: strawberry-graphql__strawberry-293
  
   
 jobs:  
